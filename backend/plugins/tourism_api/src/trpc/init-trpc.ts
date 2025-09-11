@@ -4,7 +4,7 @@ import { ITRPCContext } from 'erxes-api-shared/utils';
 
 import { IModels } from '~/connectionResolvers';
 
-import { branchRouter } from '~/modules/bms/trpc';
+import { branchRouter } from '@/bms/trpc';
 
 export type TourismTRPCContext = ITRPCContext<{ models: IModels }>;
 

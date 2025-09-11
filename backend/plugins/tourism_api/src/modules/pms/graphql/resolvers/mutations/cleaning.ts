@@ -1,5 +1,5 @@
 import { IContext } from '~/connectionResolvers';
-import { ICleaning } from '~/modules/pms/@types/cleanings';
+import { ICleaning } from '@/pms/@types/cleanings';
 
 const cleaningMutations = {
   /**

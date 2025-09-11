@@ -1,5 +1,5 @@
 import { IContext } from '~/connectionResolvers';
-import { IPmsBranch, IPmsBranchEdit } from '~/modules/pms/@types/branch';
+import { IPmsBranch, IPmsBranchEdit } from '@/pms/@types/branch';
 
 const branchMutations = {
   async pmsBranchAdd(_root, params: IPmsBranch, { models, user }: IContext) {
