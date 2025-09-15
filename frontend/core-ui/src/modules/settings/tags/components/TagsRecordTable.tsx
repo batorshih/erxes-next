@@ -7,10 +7,7 @@ import {
   Input,
   Popover,
   RecordTable,
-  RecordTableCellContent,
-  RecordTableCellDisplay,
-  RecordTableCellTrigger,
-  RecordTablePopover,
+  RecordTableInlineCell,
   RecordTableTree,
   useConfirm,
   useMultiQueryState,
@@ -18,6 +15,8 @@ import {
 } from 'erxes-ui';
 import { ITag, SelectTags, useTags } from 'ui-modules';
 import { useRemoveTag } from '../hooks/useRemoveTag';
+import { useTagsEdit } from '@/settings/tags/hooks/useTagsEdit';
+import React from 'react';
 
 export const TagMoreColumnCell = ({
   cell,
@@ -68,7 +67,9 @@ export const TagMoreColumnCell = ({
   );
 };
 
-export const tagsColumns: ColumnDef<ITag & { hasChildren: boolean }>[] = [
+export const tagsColumns: ColumnDef<
+  ITag & { hasChildren: boolean; type?: string }
+>[] = [
   {
     id: 'more',
     cell: TagMoreColumnCell,
@@ -79,21 +80,50 @@ export const tagsColumns: ColumnDef<ITag & { hasChildren: boolean }>[] = [
     header: 'Name',
     accessorKey: 'name',
     cell: ({ cell }) => {
+      const { tagsEdit, loading } = useTagsEdit();
+      const { _id, name, type } = cell.row.original;
+      const [open, setOpen] = React.useState<boolean>(false);
+      const [_name, setName] = React.useState<string>(name);
+
+      const onSave = () => {
+        if (name !== _name) {
+          tagsEdit({
+            variables: {
+              id: _id,
+              type: type,
+              name: _name,
+            },
+          });
+        }
+      };
+
+      const onChange = (el: React.ChangeEvent<HTMLInputElement>) => {
+        setName(el.currentTarget.value);
+      };
+
       return (
-        <RecordTablePopover>
-          <RecordTableCellTrigger>
+        <Popover
+          open={open}
+          onOpenChange={(open) => {
+            setOpen(open);
+            if (!open) {
+              onSave();
+            }
+          }}
+        >
+          <RecordTableInlineCell.Trigger>
             <RecordTableTree.Trigger
-              order={cell.row.original.order}
+              order={cell.row.original.order || ''}
               name={cell.getValue() as string}
               hasChildren={cell.row.original.hasChildren}
             >
               {cell.getValue() as string}
             </RecordTableTree.Trigger>
-          </RecordTableCellTrigger>
-          <RecordTableCellContent>
-            <Input value={cell.getValue() as string} />
-          </RecordTableCellContent>
-        </RecordTablePopover>
+          </RecordTableInlineCell.Trigger>
+          <RecordTableInlineCell.Content>
+            <Input value={_name} onChange={onChange} disabled={loading} />
+          </RecordTableInlineCell.Content>
+        </Popover>
       );
     },
     size: 300,
@@ -103,13 +133,24 @@ export const tagsColumns: ColumnDef<ITag & { hasChildren: boolean }>[] = [
     header: 'Parent',
     accessorKey: 'parentId',
     cell: ({ cell }) => {
+      const { _id, name, type, parentId } = cell.row.original;
+      const { tagsEdit } = useTagsEdit();
       return (
         <SelectTags.InlineCell
           scope="tag"
           mode="single"
           value={cell.getValue() as string}
           onValueChange={(value) => {
-            console.log(value);
+            if (value !== parentId) {
+              tagsEdit({
+                variables: {
+                  id: _id,
+                  type: type,
+                  name: name,
+                  parentId: value || undefined,
+                },
+              });
+            }
           }}
           tagType=""
         />
@@ -122,11 +163,11 @@ export const tagsColumns: ColumnDef<ITag & { hasChildren: boolean }>[] = [
     accessorKey: 'totalObjectCount',
     cell: ({ cell }) => {
       return (
-        <RecordTableCellDisplay className="justify-center">
+        <RecordTableInlineCell className="justify-center">
           <Badge variant={'secondary'}>
             {(cell.getValue() as number) || 0}
           </Badge>
-        </RecordTableCellDisplay>
+        </RecordTableInlineCell>
       );
     },
   },
@@ -135,11 +176,11 @@ export const tagsColumns: ColumnDef<ITag & { hasChildren: boolean }>[] = [
     accessorKey: 'objectCount',
     cell: ({ cell }) => {
       return (
-        <RecordTableCellDisplay className="justify-center">
+        <RecordTableInlineCell className="justify-center">
           <Badge variant={'secondary'}>
             {(cell.getValue() as number) || 0}
           </Badge>
-        </RecordTableCellDisplay>
+        </RecordTableInlineCell>
       );
     },
   },
@@ -148,9 +189,9 @@ export const tagsColumns: ColumnDef<ITag & { hasChildren: boolean }>[] = [
     accessorKey: 'type',
     cell: ({ cell }) => {
       return (
-        <RecordTableCellDisplay className="justify-center">
+        <RecordTableInlineCell className="justify-center">
           <Badge>{cell.getValue() as string}</Badge>
-        </RecordTableCellDisplay>
+        </RecordTableInlineCell>
       );
     },
     size: 250,

@@ -1,12 +1,19 @@
 import { MainNavigationBar } from '@/navigation/components/MainNavigationBar';
 import { SettingsSidebar } from '@/settings/components/SettingsSidebar';
-import { Sidebar } from 'erxes-ui';
+import { Sidebar, useQueryState } from 'erxes-ui';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Outlet, useLocation } from 'react-router';
 
 export const DefaultLayout = () => {
   const location = useLocation();
   const isSettings = location.pathname.includes('/settings');
+  const [mainSidebarOpen, setMainSidebarOpen] = useAtom(mainSidebarOpenState);
+  const [inPreview] = useQueryState<boolean>('inPreview');
+
+  if (inPreview) {
+    return <Outlet />;
+  }
+
   return (
     <Sidebar.Provider className="w-screen">
       <Sidebar collapsible="offcanvas" variant="sidebar" className="p-0">

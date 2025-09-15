@@ -1,6 +1,5 @@
 import * as React from 'react';
-
-import { Slot } from '@radix-ui/react-slot';
+import { Slot } from 'radix-ui';
 import { cva, VariantProps } from 'class-variance-authority';
 
 import { Button } from 'erxes-ui/components/button';
@@ -19,7 +18,6 @@ import {
 import { Key } from 'erxes-ui/types/Key';
 import { useScopedHotkeys } from 'erxes-ui/modules/hotkey/hooks/useScopedHotkeys';
 import { AppHotkeyScope } from 'erxes-ui/modules/hotkey/types/AppHotkeyScope';
-import { useQueryState } from 'erxes-ui/hooks';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar:state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -71,7 +69,6 @@ const SidebarProvider = React.forwardRef<
   ) => {
     const isMobile = useIsMobile();
     const [openMobile, setOpenMobile] = React.useState(false);
-    const [hideSidebar] = useQueryState<boolean>('hideSidebar');
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
@@ -113,8 +110,8 @@ const SidebarProvider = React.forwardRef<
 
     const contextValue = React.useMemo<ISidebarContext>(
       () => ({
-        state: hideSidebar ? 'collapsed' : state,
-        open: hideSidebar ? false : open,
+        state,
+        open,
         setOpen,
         isMobile,
         openMobile,
@@ -129,7 +126,6 @@ const SidebarProvider = React.forwardRef<
         openMobile,
         setOpenMobile,
         toggleSidebar,
-        hideSidebar,
       ],
     );
 
@@ -202,7 +198,7 @@ const SidebarRoot = React.forwardRef<
           <Sheet.View
             data-sidebar="sidebar"
             data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar p-0 text-foreground [&>button]:hidden"
+            className="w-[--sidebar-width] bg-sidebar p-0 text-foreground [&>button]:hidden border-r-0"
             style={
               {
                 '--sidebar-width': SIDEBAR_WIDTH_MOBILE,
@@ -349,7 +345,7 @@ const SidebarInput = React.forwardRef<
       ref={ref}
       data-sidebar="input"
       className={cn(
-        'h-8 w-full bg-background shadow-none focus-visible:ring-2',
+        'w-full bg-background shadow-none focus-visible:ring-2',
         className,
       )}
       {...props}
@@ -443,14 +439,14 @@ const SidebarGroupLabel = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<'div'> & { asChild?: boolean }
 >(({ className, asChild = false, ...props }, ref) => {
-  const Comp = asChild ? Slot : 'div';
+  const Comp = asChild ? Slot.Root : 'div';
 
   return (
     <Comp
       ref={ref}
       data-sidebar="group-label"
       className={cn(
-        'flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-semibold text-accent-foreground  outline-none transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0',
+        'flex h-6 shrink-0 items-center rounded-md px-2 text-xs font-semibold text-accent-foreground  outline-none transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0',
         'group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 data-[state=open]:hover:bg-accent data-[state=closed]:hover:bg-accent  uppercase font-mono',
         className,
       )}
@@ -464,7 +460,7 @@ const SidebarGroupAction = React.forwardRef<
   HTMLButtonElement,
   React.ComponentProps<'button'> & { asChild?: boolean }
 >(({ className, asChild = false, ...props }, ref) => {
-  const Comp = asChild ? Slot : 'button';
+  const Comp = asChild ? Slot.Root : 'button';
 
   return (
     <Comp
@@ -564,7 +560,7 @@ const SidebarMenuButton = React.forwardRef<
     },
     ref,
   ) => {
-    const Comp = asChild ? Slot : 'button';
+    const Comp = asChild ? Slot.Root : 'button';
     const { isMobile, state } = useSidebar();
 
     const button = (
@@ -610,7 +606,7 @@ const SidebarMenuAction = React.forwardRef<
     showOnHover?: boolean;
   }
 >(({ className, asChild = false, showOnHover = false, ...props }, ref) => {
-  const Comp = asChild ? Slot : 'button';
+  const Comp = asChild ? Slot.Root : 'button';
 
   return (
     <Comp
@@ -723,7 +719,7 @@ const SidebarMenuSubButton = React.forwardRef<
     isActive?: boolean;
   }
 >(({ asChild = false, size = 'md', isActive, className, ...props }, ref) => {
-  const Comp = asChild ? Slot : 'a';
+  const Comp = asChild ? Slot.Root : 'a';
 
   return (
     <Comp

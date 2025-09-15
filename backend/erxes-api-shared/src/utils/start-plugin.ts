@@ -1,23 +1,25 @@
-import * as dotenv from 'dotenv';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import * as trpcExpress from '@trpc/server/adapters/express';
-import { AnyRouter } from '@trpc/server/dist/unstable-core-do-not-import';
+import * as dotenv from 'dotenv';
+
 import cookieParser from 'cookie-parser';
 
 import cors from 'cors';
 import express, {
-  Router,
   Request as ApiRequest,
   Response as ApiResponse,
   Application,
+  Router,
 } from 'express';
 import { DocumentNode, GraphQLScalarType } from 'graphql';
 import * as http from 'http';
 import * as path from 'path';
 
+import { AnyRouter } from '@trpc/server/unstable-core-do-not-import';
+import rateLimit from 'express-rate-limit';
 import {
   SegmentConfigs,
   startAutomations,
@@ -29,9 +31,14 @@ import { wrapApolloMutations } from './apollo/wrapperMutations';
 import { extractUserFromHeader } from './headers';
 import { AfterProcessConfigs, logHandler, startAfterProcess } from './logs';
 import { closeMongooose } from './mongo';
-import { joinErxesGateway, leaveErxesGateway } from './service-discovery';
+import {
+  initializePluginConfig,
+  joinErxesGateway,
+  leaveErxesGateway,
+} from './service-discovery';
 import { createTRPCContext } from './trpc';
 import { getSubdomain } from './utils';
+import { startPayments } from '../common-modules/payment/worker';
 
 dotenv.config();
 
@@ -39,6 +46,8 @@ type IMeta = {
   automations?: AutomationConfigs;
   segments?: SegmentConfigs;
   afterProcess?: AfterProcessConfigs;
+  payments?: any;
+  notificationModules?: any[];
 };
 
 type ApiHandler = {
@@ -76,7 +85,7 @@ type ConfigTypes = {
   corsOptions?: any;
   subscriptionPluginPath?: any;
   trpcAppRouter?: {
-    router: AnyRouter;
+    router: any;
     createContext: <TContext>(
       subdomain: string,
       context: any,
@@ -155,10 +164,6 @@ export async function startPlugin(
   }
 
   if (configs.hasSubscriptions) {
-    console.log(
-      'configs.subscriptionPluginPath',
-      configs.subscriptionPluginPath,
-    );
     app.get('/subscriptionPlugin.js', async (_req, res) => {
       res.sendFile(path.join(configs.subscriptionPluginPath));
     });
@@ -184,10 +189,9 @@ export async function startPlugin(
     next();
   });
 
-  // // Error handling middleware
+  // Error handling middleware
   // app.use((error: any, _req: any, res: any) => {
-  //   // const msg = filterXSS(error.message);
-  //   const msg = error.message;
+  //   const msg = filterXSS(error.message);
 
   //   // debugError(`Error: ${msg}`);
 
@@ -277,7 +281,13 @@ export async function startPlugin(
   );
 
   if (configs.meta) {
-    const { automations, segments, afterProcess } = configs.meta || {};
+    const {
+      automations,
+      segments,
+      afterProcess,
+      notificationModules,
+      payments,
+    } = configs.meta || {};
 
     if (automations) {
       await startAutomations(configs.name, automations);
@@ -289,6 +299,18 @@ export async function startPlugin(
 
     if (afterProcess) {
       await startAfterProcess(configs.name, afterProcess);
+    }
+
+    if (notificationModules) {
+      await initializePluginConfig(
+        configs.name,
+        'notificationModules',
+        notificationModules,
+      );
+    }
+
+    if (payments) {
+      await startPayments(configs.name, payments);
     }
   } // end configs.meta if
 

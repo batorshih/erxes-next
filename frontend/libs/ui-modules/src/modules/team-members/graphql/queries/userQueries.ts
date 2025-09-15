@@ -31,16 +31,19 @@ export const GET_USERS = gql`
 `;
 
 export const GET_USERS_GROUP = gql`
-  query usersGroups($page: Int, $perPage: Int) {
-    usersGroups(page: $page, perPage: $perPage) {
-      _id
-      name
-      description
-      members {
+  query UsersGroups($searchValue: String, $orderBy: JSON, ${GQL_CURSOR_PARAM_DEFS}) {
+    usersGroups(searchValue: $searchValue, orderBy: $orderBy,${GQL_CURSOR_PARAMS}) {
+      list {
         _id
-        details {
-          fullName
-          avatar
+        name
+        description
+        memberIds
+        members {
+          _id
+          details {
+            fullName
+            avatar
+          }
         }
       }
     }
@@ -73,6 +76,7 @@ export const GET_USER_INLINE_DETAIL = gql`
 export const GET_ASSIGNED_MEMBER = gql`
   query AssignedMember($_id: String) {
     userDetail(_id: $_id) {
+      _id
       details {
         avatar
         fullName

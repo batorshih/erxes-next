@@ -1,7 +1,11 @@
-import { IOrderInput } from '../core-types';
 import dayjs from 'dayjs';
+import { Request, Response } from 'express';
 import mongoose from 'mongoose';
+import fetch from 'node-fetch'; // or global fetch in Node 18+
+import { IOrderInput } from '../core-types';
 import { randomAlphanumeric } from './random';
+import { redis } from './redis';
+import { random } from './string';
 
 export const getEnv = ({
   name,
@@ -179,7 +183,6 @@ export const chunkArray = <T>(myArray: T[], chunkSize: number): T[][] => {
   return tempArray;
 };
 
-
 export const fixDate = (
   value: string | number | Date,
   defaultValue: Date = new Date(),
@@ -205,7 +208,7 @@ export const checkUserIds = (
 };
 
 const generateRandomEmail = () => {
-  return randomAlphanumeric(15) + '@gmail.com';
+  return random('Aa', 15) + '@gmail.com';
 };
 
 export const getUniqueValue = async (
@@ -230,7 +233,9 @@ export const getUniqueValue = async (
   }
 
   if (retryCount >= maxRetries) {
-    throw new Error(`Unable to generate unique value for field ${fieldName} after ${maxRetries} attempts`);
+    throw new Error(
+      `Unable to generate unique value for field ${fieldName} after ${maxRetries} attempts`,
+    );
   }
 
   return uniqueValue;
@@ -279,14 +284,18 @@ export const getNextMonth = (date: Date): { start: number; end: number } => {
   return { start, end };
 };
 
-export const fixNum = (value?: number, p = 4) => {
+export const fixNum = (value: any, p = 4) => {
   const cleanNumber = Number((value ?? '').toString().replace(/,/g, ''));
 
   if (isNaN(cleanNumber)) {
     return 0;
   }
 
-  return Number(cleanNumber.toFixed(p));
+  const multiplier = 10 ** p;
+
+  const big = Math.round(Number((cleanNumber * multiplier).toFixed(2)));
+
+  return Number((big / multiplier).toFixed(p));
 };
 
 const DATE_OPTIONS = {
@@ -380,4 +389,31 @@ export const isImage = (mimetypeOrName: string) => {
 
 export const isVideo = (mimeType: string) => {
   return mimeType.includes('video');
+};
+
+export function createHealthRoute(serviceName: string) {
+  return (req: Request, res: Response) => {
+    res.json({
+      status: 'ok',
+      service: serviceName,
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+    });
+  };
+}
+
+export const checkServiceRunning = async (
+  serviceName: 'automations' | 'logs' | 'notifications',
+) => {
+  const address = await redis.get(`service-${serviceName}`);
+  if (!address) return false;
+
+  try {
+    const res = await fetch(`${address}/health`);
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data.status === 'ok';
+  } catch (err) {
+    return false;
+  }
 };

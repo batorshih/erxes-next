@@ -1,19 +1,15 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Cell, ColumnDef } from '@tanstack/table-core';
+import { ColumnDef } from '@tanstack/table-core';
 import { useIntegrations } from '../hooks/useIntegrations';
-import {
-  IBrand,
-  IIntegrationColumnDef,
-  IIntegrationItem,
-} from '../types/integration';
+import { IIntegrationColumnDef, IIntegrationItem } from '../types/integration';
 import {
   Badge,
   Button,
   InlineCell,
   InlineCellDisplay,
   RecordTable,
-  RecordTableCellDisplay,
+  RecordTableInlineCell,
   Skeleton,
 } from 'erxes-ui';
 
@@ -27,8 +23,6 @@ import {
 import { INTEGRATIONS, OTHER_INTEGRATIONS } from '../constants/integrations';
 import { useIntegrationsCounts } from '../hooks/useIntegrationsCounts';
 import { AddIntegration } from './add-integration/AddIntegration';
-
-const INTEGRATION_PER_PAGE = 30;
 
 export const IntegrationsList = () => {
   const params = useParams();
@@ -46,12 +40,15 @@ export const IntegrationsList = () => {
     },
     skip: !params?.kind,
   });
+
   if (loading) {
     return <Skeleton className="w-full h-auto aspect-[9/2]" />;
   }
+
   if (error) {
     return <code>{error.message}</code>;
   }
+
   if (integrations.length) {
     return (
       <div className="w-full h-auto flex flex-col gap-3">
@@ -74,6 +71,7 @@ export const IntegrationsList = () => {
       </div>
     );
   }
+
   return (
     <div className="rounded-md border border-dashed border-sidebar-border bg-sidebar p-3 gap-3 flex flex-col items-center justify-center w-full h-auto aspect-[9/2]">
       <IconHexagonPlusFilled size={30} className="text-accent-foreground" />
@@ -96,13 +94,9 @@ export const integrationTypeColumns: ColumnDef<IIntegrationColumnDef>[] = [
     header: () => <RecordTable.InlineHead label="Name" />,
     cell: ({ cell }) => {
       return (
-        <InlineCell
-          name={cell.column.id}
-          recordId={cell.row.original._id}
-          display={() => (
-            <InlineCellDisplay>{cell.getValue() as string}</InlineCellDisplay>
-          )}
-        />
+        <RecordTableInlineCell>
+          {cell.getValue() as string}
+        </RecordTableInlineCell>
       );
     },
     size: 250,
@@ -113,15 +107,9 @@ export const integrationTypeColumns: ColumnDef<IIntegrationColumnDef>[] = [
     header: () => <RecordTable.InlineHead label="Kind" />,
     cell: ({ cell }) => {
       return (
-        <InlineCell
-          name={cell.column.id}
-          recordId={cell.row.original._id}
-          display={() => (
-            <InlineCellDisplay className="w-full flex items-center justify-center">
-              <Badge className="text-xs">{cell.getValue() as string}</Badge>
-            </InlineCellDisplay>
-          )}
-        />
+        <RecordTableInlineCell className="w-full flex items-center justify-center">
+          <Badge className="text-xs">{cell.getValue() as string}</Badge>
+        </RecordTableInlineCell>
       );
     },
   },
@@ -131,9 +119,9 @@ export const integrationTypeColumns: ColumnDef<IIntegrationColumnDef>[] = [
     header: () => <RecordTable.InlineHead label="Brand" />,
     cell: ({ cell }) => {
       return (
-        <RecordTableCellDisplay>
+        <RecordTableInlineCell>
           {cell.getValue() as string}
-        </RecordTableCellDisplay>
+        </RecordTableInlineCell>
       );
     },
     size: 235,
@@ -147,29 +135,19 @@ export const integrationTypeColumns: ColumnDef<IIntegrationColumnDef>[] = [
 
       if (status) {
         return (
-          <InlineCell
-            name={cell.column.id}
-            recordId={cell.row.original._id}
-            display={() => (
-              <InlineCellDisplay className="w-full flex items-center justify-center">
-                <Badge className="text-xs capitalize" variant={'success'}>
-                  Active
-                </Badge>
-              </InlineCellDisplay>
-            )}
-          />
+          <RecordTableInlineCell className="w-full flex items-center justify-center">
+            <Badge className="text-xs capitalize" variant={'success'}>
+              Active
+            </Badge>
+          </RecordTableInlineCell>
         );
       } else
         return (
-          <InlineCell
-            name="healthStatus"
-            recordId={cell.row.original._id}
-            display={() => (
-              <Badge className="text-xs" variant={'destructive'}>
-                Inactive
-              </Badge>
-            )}
-          />
+          <RecordTableInlineCell>
+            <Badge className="text-xs" variant={'destructive'}>
+              Inactive
+            </Badge>
+          </RecordTableInlineCell>
         );
     },
     size: 100,
@@ -184,29 +162,19 @@ export const integrationTypeColumns: ColumnDef<IIntegrationColumnDef>[] = [
 
       if (status === 'healthy') {
         return (
-          <InlineCell
-            name={cell.column.id}
-            recordId={cell.row.original._id}
-            display={() => (
-              <InlineCellDisplay className="w-full flex items-center justify-center">
-                <Badge className="text-xs capitalize" variant={'success'}>
-                  {status}
-                </Badge>
-              </InlineCellDisplay>
-            )}
-          />
+          <RecordTableInlineCell className="w-full flex items-center justify-center">
+            <Badge className="text-xs capitalize" variant={'success'}>
+              {status}
+            </Badge>
+          </RecordTableInlineCell>
         );
       } else
         return (
-          <InlineCell
-            name="healthStatus"
-            recordId={cell.row.original._id}
-            display={() => (
-              <Badge className="text-xs" variant={'destructive'}>
-                {'Unhealthy'}
-              </Badge>
-            )}
-          />
+          <RecordTableInlineCell>
+            <Badge className="text-xs" variant={'destructive'}>
+              {'Unhealthy'}
+            </Badge>
+          </RecordTableInlineCell>
         );
     },
     size: 120,

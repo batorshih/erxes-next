@@ -11,9 +11,11 @@ export const AccountField = ({
   detIndex,
   filter,
   allDetails,
+  labelTxt,
 }: ICommonFieldProps & {
   filter?: any;
   allDetails?: boolean;
+  labelTxt?: string
 }) => {
   const details = useWatch({
     control: form.control,
@@ -47,7 +49,7 @@ export const AccountField = ({
       name={`trDocs.${index}.details.${detIndex ?? 0}.accountId`}
       render={({ field }) => (
         <Form.Item>
-          <Form.Label>Account</Form.Label>
+          <Form.Label>{labelTxt || 'Account'}</Form.Label>
           <Form.Control>
             <SelectAccount
               value={field.value || ''}

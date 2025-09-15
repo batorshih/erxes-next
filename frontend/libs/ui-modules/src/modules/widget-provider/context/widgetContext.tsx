@@ -1,21 +1,19 @@
-import { IUIConfig } from 'erxes-ui';
 import { createContext, useContext } from 'react';
 
-export type WidgetProps = {
-  module: IUIConfig['modules'][number] & {
-    pluginName: string;
-  };
+export type RelationWidgetProps = {
+  module: string;
+  pluginName: string;
   contentId: string;
   contentType: string;
 };
 
-export const WidgetContext = createContext<{
-  Widget: (props: WidgetProps) => JSX.Element | null;
-  widgetsModules: (IUIConfig['modules'][number] & { pluginName: string })[];
+export const RelationWidgetContext = createContext<{
+  RelationWidget: (props: RelationWidgetProps) => JSX.Element | null;
+  relationWidgetsModules: { name: string; pluginName: string }[];
 }>(
   {} as {
-    Widget: (props: any) => JSX.Element | null;
-    widgetsModules: (IUIConfig['modules'][number] & { pluginName: string })[];
+    RelationWidget: (props: any) => JSX.Element | null;
+    relationWidgetsModules: { name: string; pluginName: string }[];
   },
 );
 
@@ -25,8 +23,8 @@ export const WidgetProvider = ({
   widgetsModules,
 }: {
   children: React.ReactNode;
-  Widget: (props: WidgetProps) => JSX.Element | null;
-  widgetsModules: (IUIConfig['modules'][number] & { pluginName: string })[];
+  RelationWidget: (props: RelationWidgetProps) => JSX.Element | null;
+  relationWidgetsModules: { name: string; pluginName: string }[];
 }) => {
   return (
     <WidgetContext.Provider value={{ Widget, widgetsModules }}>

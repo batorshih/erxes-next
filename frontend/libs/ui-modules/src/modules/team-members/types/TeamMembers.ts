@@ -5,6 +5,8 @@ export interface IMember {
   email?: string;
   username?: string;
   details?: {
+    firstName?: string;
+    lastName?: string;
     fullName?: string;
     avatar?: string;
   };
@@ -12,13 +14,18 @@ export interface IMember {
 export interface IMemberGroup {
   _id: string;
   name: string;
-  members: IMember[];
   description: string;
+  members?: IUser[];
+  memberIds?: string[];
 }
 
-export interface IMemberGroupContext {
-  selectedUsersGroup: IMemberGroup | undefined;
-  setSelectedUsersGroup: (usersGroup: IMemberGroup) => void;
+export interface IUserGroupContext {
+  groupsIds: string[];
+  onSelect: (group: IUserGroup) => void;
+  usersGroups: IUserGroup[];
+  setUsersGroups: (usersGroups: IUserGroup[]) => void;
+  loading: boolean;
+  error: string | null;
 }
 
 export interface MentionMenuProps extends SlashMenuProps {

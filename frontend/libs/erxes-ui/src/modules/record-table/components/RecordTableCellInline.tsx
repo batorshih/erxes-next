@@ -1,59 +1,17 @@
-import { Button, Popover } from 'erxes-ui/components';
+import { Badge, Button, Popover } from 'erxes-ui/components';
 import { cn } from 'erxes-ui/lib/utils';
 import React from 'react';
-import * as PopoverPrimitive from '@radix-ui/react-popover';
-import { usePreviousHotkeyScope } from 'erxes-ui/modules/hotkey/hooks/usePreviousHotkeyScope';
-import { Key } from 'erxes-ui/types';
-import { useScopedHotkeys } from 'erxes-ui/modules/hotkey';
+import { Popover as PopoverPrimitive } from 'radix-ui';
+import { UseHotkeysOptionsWithoutBuggyOptions } from 'erxes-ui/modules/hotkey';
 
-export const RecordTablePopover = ({
-  scope,
-  onOpenChange,
-  open,
-  closeOnEnter,
-  ...props
-}: React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Root> & {
+export interface ReactTablePopoverProps
+  extends React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Root> {
   scope?: string;
   closeOnEnter?: boolean;
-}) => {
-  const [_open, _setOpen] = React.useState(false);
-  const {
-    setHotkeyScopeAndMemorizePreviousScope,
-    goBackToPreviousHotkeyScope,
-  } = usePreviousHotkeyScope();
+  scopeOptions?: UseHotkeysOptionsWithoutBuggyOptions;
+}
 
-  useScopedHotkeys(
-    Key.Enter,
-    () => {
-      if (!scope || !closeOnEnter) {
-        return;
-      }
-      onOpenChange?.(false);
-      _setOpen(false);
-      goBackToPreviousHotkeyScope();
-    },
-    scope + '.Popover',
-    [],
-  );
-
-  return (
-    <PopoverPrimitive.Root
-      modal
-      {...props}
-      open={open ?? _open}
-      onOpenChange={(open) => {
-        onOpenChange?.(open);
-        _setOpen(open);
-        open
-          ? setHotkeyScopeAndMemorizePreviousScope(scope + '.Popover')
-          : goBackToPreviousHotkeyScope();
-      }}
-    />
-  );
-};
-RecordTablePopover.displayName = 'RecordTablePopover';
-
-export const RecordTableCellTrigger = React.forwardRef<
+const RecordTableCellTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentPropsWithoutRef<typeof Button>
 >(({ children, className, ...props }, ref) => {
@@ -62,7 +20,7 @@ export const RecordTableCellTrigger = React.forwardRef<
       <Button
         variant="ghost"
         className={cn(
-          'h-8 px-2 w-full justify-start text-left font-normal rounded-none focus-visible:relative focus-visible:z-10 focus-visible:outline-transparent focus-visible:shadow-subtle overflow-hidden',
+          'h-8 px-2 w-full justify-start text-left rounded-none focus-visible:relative focus-visible:z-10 focus-visible:outline-transparent focus-visible:shadow-subtle overflow-hidden',
           className,
         )}
         ref={ref}
@@ -74,7 +32,7 @@ export const RecordTableCellTrigger = React.forwardRef<
   );
 });
 
-export const RecordTableCellContent = React.forwardRef<
+const RecordTableCellContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
 >(({ className, ...props }, ref) => {
@@ -95,7 +53,7 @@ export const RecordTableCellContent = React.forwardRef<
 
 RecordTableCellTrigger.displayName = 'RecordTableCellTrigger';
 
-export const RecordTableCellDisplay = React.forwardRef<
+const RecordTableCellDisplay = React.forwardRef<
   React.ElementRef<typeof Button>,
   React.ComponentPropsWithoutRef<typeof Button>
 >(({ className, children, ...props }, ref) => {
@@ -103,7 +61,7 @@ export const RecordTableCellDisplay = React.forwardRef<
     <Button
       variant="ghost"
       className={cn(
-        'h-8 px-2 w-full justify-start text-left font-normal rounded-none',
+        'h-8 px-2 w-full justify-start text-left font-normal rounded-none overflow-hidden',
         className,
       )}
       ref={ref}
@@ -117,3 +75,30 @@ export const RecordTableCellDisplay = React.forwardRef<
 });
 
 RecordTableCellDisplay.displayName = 'RecordTableCellDisplay';
+
+export const RecordTableInlineAnchor = React.forwardRef<
+  React.ElementRef<typeof Badge>,
+  React.ComponentPropsWithoutRef<typeof Badge>
+>(({ className, onClick, children, ...props }, ref) => {
+  return (
+    <Badge
+      ref={ref}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.(e);
+      }}
+      variant="secondary"
+      className={cn('min-w-32 group truncate', className)}
+      {...props}
+    >
+      {children}
+    </Badge>
+  );
+});
+RecordTableInlineAnchor.displayName = 'RecordTableInlineAnchor';
+
+export const RecordTableInlineCell = Object.assign(RecordTableCellDisplay, {
+  Trigger: RecordTableCellTrigger,
+  Content: RecordTableCellContent,
+  Anchor: RecordTableInlineAnchor,
+});

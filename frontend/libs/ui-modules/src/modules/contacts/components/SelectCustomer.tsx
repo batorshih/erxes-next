@@ -1,18 +1,19 @@
+import { SelectCustomerContext } from '../contexts/SelectCustomerContext';
+import { ICustomer } from '../types';
+import { useSelectCustomerContext } from '../hooks/useSelectCustomerContext';
+import { useCustomers } from '../hooks';
+import { useDebounce } from 'use-debounce';
+import { useState } from 'react';
 import {
-  AvatarProps,
-  ButtonProps,
+  cn,
   Combobox,
   Command,
+  Form,
   Popover,
-  Skeleton,
+  PopoverScoped,
+  RecordTableInlineCell,
 } from 'erxes-ui';
-import { useCustomers } from '../hooks/useCustomers';
-import { useState } from 'react';
-import { useDebounce } from 'use-debounce';
-import { ICustomerInline } from '../types/Customer';
-import React from 'react';
-import { useCustomerInline } from '../hooks';
-import { CustomerInline } from './CustomerInline';
+import { CustomersInline } from './CustomersInline';
 
 interface SelectCustomerProps {
   value?: string;
@@ -154,3 +155,119 @@ export const SelectCustomerItem = ({
     </Command.Item>
   );
 };
+
+const SelectCustomerInlineCell = ({
+  onValueChange,
+  scope,
+  ...props
+}: Omit<React.ComponentProps<typeof SelectCustomerProvider>, 'children'> & {
+  scope?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <SelectCustomerProvider
+      onValueChange={(value) => {
+        onValueChange?.(value);
+        setOpen(false);
+      }}
+      {...props}
+    >
+      <PopoverScoped open={open} onOpenChange={setOpen} scope={scope}>
+        <RecordTableInlineCell.Trigger>
+          <SelectCustomer.Value />
+        </RecordTableInlineCell.Trigger>
+        <RecordTableInlineCell.Content>
+          <SelectCustomer.Content />
+        </RecordTableInlineCell.Content>
+      </PopoverScoped>
+    </SelectCustomerProvider>
+  );
+};
+
+const SelectCustomerRoot = ({
+  onValueChange,
+  className,
+  mode = 'single',
+  ...props
+}: Omit<React.ComponentProps<typeof SelectCustomerProvider>, 'children'> & {
+  className?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <SelectCustomerProvider
+      onValueChange={(value) => {
+        if (mode === 'single') {
+          setOpen(false);
+        }
+        onValueChange?.(value);
+      }}
+      mode={mode}
+      {...props}
+    >
+      <Popover open={open} onOpenChange={setOpen}>
+        <Combobox.Trigger
+          className={cn('w-full inline-flex', className)}
+          variant="outline"
+        >
+          <SelectCustomer.Value />
+        </Combobox.Trigger>
+        <Combobox.Content>
+          <SelectCustomer.Content />
+        </Combobox.Content>
+      </Popover>
+    </SelectCustomerProvider>
+  );
+};
+const SelectCustomerValue = () => {
+  const { customerIds, customers, setCustomers } = useSelectCustomerContext();
+
+  return (
+    <CustomersInline
+      customerIds={customerIds}
+      customers={customers}
+      updateCustomers={setCustomers}
+    />
+  );
+};
+
+const SelectCustomerFormItem = ({
+  onValueChange,
+  className,
+  ...props
+}: Omit<React.ComponentProps<typeof SelectCustomerProvider>, 'children'> & {
+  className?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <SelectCustomerProvider
+      onValueChange={(value) => {
+        onValueChange?.(value);
+        setOpen(false);
+      }}
+      {...props}
+    >
+      <Popover open={open} onOpenChange={setOpen}>
+        <Form.Control>
+          <Combobox.Trigger className={cn('w-full shadow-xs', className)}>
+            <SelectCustomer.Value />
+          </Combobox.Trigger>
+        </Form.Control>
+
+        <Combobox.Content>
+          <SelectCustomer.Content />
+        </Combobox.Content>
+      </Popover>
+    </SelectCustomerProvider>
+  );
+};
+
+export const SelectCustomer = Object.assign(SelectCustomerRoot, {
+  Provider: SelectCustomerProvider,
+  Content: SelectCustomerContent,
+  Item: SelectCustomerCommandItem,
+  InlineCell: SelectCustomerInlineCell,
+  Value: SelectCustomerValue,
+  FormItem: SelectCustomerFormItem,
+});

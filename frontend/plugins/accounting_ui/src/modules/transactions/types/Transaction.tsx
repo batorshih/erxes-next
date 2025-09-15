@@ -47,6 +47,7 @@ interface ICommontTr {
     type: string;
     id: string;
   }[];
+  followExtras?: any;
   preTrId?: string;
 
   branchId?: string;

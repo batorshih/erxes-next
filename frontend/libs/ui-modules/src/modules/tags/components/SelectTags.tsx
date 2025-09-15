@@ -3,9 +3,8 @@ import {
   Command,
   Button,
   PopoverScoped,
-  RecordTableCellContent,
-  RecordTableCellTrigger,
-  RecordTablePopover,
+  RecordTableInlineCell,
+  Popover,
   SelectTree,
   TextOverflowTooltip,
 } from 'erxes-ui';
@@ -67,7 +66,6 @@ export const SelectTagsProvider = ({
       });
     }
   };
-
   return (
     <SelectTagsContext.Provider
       value={{
@@ -185,9 +183,9 @@ export const SelectTagsItem = ({
   return (
     <SelectTree.Item
       key={tag._id}
-      id={tag._id}
+      _id={tag._id}
       name={tag.name}
-      order={tag.order}
+      order={tag.order || ''}
       hasChildren={tag.hasChildren}
       selected={isSelected}
       onSelect={() => onSelect(tag)}
@@ -218,7 +216,7 @@ export const TagList = ({
   }
 
   return (
-    <>
+    <div className="flex flex-wrap gap-2 w-full">
       {selectedTagIds.map((tagId) => (
         <TagBadge
           key={tagId}
@@ -229,6 +227,9 @@ export const TagList = ({
           onCompleted={(tag) => {
             if (!tag) return;
             if (selectedTagIds.includes(tag._id)) {
+              setSelectedTags(selectedTags.filter((t) => t._id !== tag._id));
+            }
+            if (!selectedTags.includes(tag)) {
               setSelectedTags([...selectedTags, tag]);
             }
           }}
@@ -238,17 +239,20 @@ export const TagList = ({
           {...props}
         />
       ))}
-    </>
+    </div>
   );
 };
 
-export const SelectTagsValue = () => {
+export const SelectTagsValue = ({ placeholder }: { placeholder?: string }) => {
   const { selectedTags, mode } = useSelectTagsContext();
 
   if (selectedTags?.length > 1) return <>{selectedTags.length} tags selected</>;
 
   return (
-    <TagList placeholder="Select tags" renderAsPlainText={mode === 'single'} />
+    <TagList
+      placeholder={placeholder === undefined ? 'Select tags' : placeholder}
+      renderAsPlainText={mode === 'single'}
+    />
   );
 };
 
@@ -283,14 +287,14 @@ export const SelectTagsInlineCell = ({
       }}
       {...props}
     >
-      <RecordTablePopover open={open} onOpenChange={setOpen} scope={scope}>
-        <RecordTableCellTrigger>
-          <SelectTagsValue />
-        </RecordTableCellTrigger>
-        <RecordTableCellContent className="min-w-72">
+      <PopoverScoped open={open} onOpenChange={setOpen} scope={scope}>
+        <RecordTableInlineCell.Trigger>
+          <SelectTagsValue placeholder="" />
+        </RecordTableInlineCell.Trigger>
+        <RecordTableInlineCell.Content className="min-w-72">
           <SelectTagsContent />
-        </RecordTableCellContent>
-      </RecordTablePopover>
+        </RecordTableInlineCell.Content>
+      </PopoverScoped>
     </SelectTagsProvider>
   );
 };
@@ -312,7 +316,7 @@ export const SelectTagsDetail = React.forwardRef<
       targetIds,
       tagType,
       value,
-      mode,
+      mode = 'multiple',
       options,
       ...props
     },
@@ -328,13 +332,22 @@ export const SelectTagsDetail = React.forwardRef<
         {...{ targetIds, tagType, value, mode, options }}
       >
         <PopoverScoped open={open} onOpenChange={setOpen} scope={scope}>
-          <Combobox.Trigger ref={ref} {...props}>
-            <SelectTagsValue />
-          </Combobox.Trigger>
+          <Popover.Trigger asChild>
+            <Button
+              ref={ref}
+              {...props}
+              className="w-min text-sm font-medium shadow-xs"
+              variant="outline"
+            >
+              Add Tags
+              <IconPlus className="text-lg" />
+            </Button>
+          </Popover.Trigger>
           <Combobox.Content>
             <SelectTagsContent />
           </Combobox.Content>
         </PopoverScoped>
+        <TagList />
       </SelectTagsProvider>
     );
   },
@@ -356,17 +369,17 @@ export const SelectTagsCommandbarItem = ({
       }}
       {...props}
     >
-      <RecordTablePopover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={setOpen}>
         <Button variant={'secondary'} asChild>
-          <RecordTableCellTrigger>
+          <RecordTableInlineCell.Trigger>
             <IconTag />
             Tag
-          </RecordTableCellTrigger>
+          </RecordTableInlineCell.Trigger>
         </Button>
-        <RecordTableCellContent className="w-96">
+        <RecordTableInlineCell.Content className="w-96">
           <SelectTagsContent />
-        </RecordTableCellContent>
-      </RecordTablePopover>
+        </RecordTableInlineCell.Content>
+      </Popover>
     </SelectTagsProvider>
   );
 };

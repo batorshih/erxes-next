@@ -46,7 +46,7 @@ export const useTags = (
   return {
     tags: tagsWithHasChildren,
     sortedTags: [...(tagsWithHasChildren || [])].sort((a, b) =>
-      a.order?.localeCompare(b.order),
+      (a.order || '').localeCompare(b.order || ''),
     ),
     pageInfo,
     totalCount,

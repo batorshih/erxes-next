@@ -1,4 +1,4 @@
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { Separator, Skeleton, useQueryState } from 'erxes-ui';
 
 import { ConversationContext } from '@/inbox/conversations/context/ConversationContext';
@@ -14,14 +14,23 @@ import { ConversationMessages } from '@/inbox/conversation-messages/components/C
 import { InboxMessagesSkeleton } from '@/inbox/components/InboxMessagesSkeleton';
 import { useIntegrationDetail } from '@/integrations/hooks/useIntegrations';
 import { NoConversationSelected } from './NoConversationSelected';
+import { ConversationMarkAsReadEffect } from './ConversationMarkAsReadEffect';
+import { IConversation } from '@/inbox/types/Conversation';
+import { IIntegration } from '@/integrations/types/Integration';
+import { MessageInputIntegrationWrapper } from '@/integrations/components/MessageInputIntegrationWrapper';
+import { messageExtraInfoState } from '../states/messageExtraInfoState';
+import { useEffect } from 'react';
+import { ConversationSideWidget } from '@/inbox/conversations/conversation-detail/components/ConversationSideWidget';
 
 export const ConversationDetail = () => {
   const [conversationId] = useQueryState<string>('conversationId');
   const activeConversationCandidate = useAtomValue(activeConversationState);
+  const setExtraInfo = useSetAtom(messageExtraInfoState);
 
   const currentConversation =
-    activeConversationCandidate?._id === conversationId &&
-    activeConversationCandidate;
+    activeConversationCandidate?._id === conversationId
+      ? activeConversationCandidate
+      : null;
 
   const { conversationDetail, loading } = useConversationDetail({
     variables: {
@@ -32,18 +41,25 @@ export const ConversationDetail = () => {
 
   const { integrationId } = currentConversation || conversationDetail || {};
 
-  const { integration, loading: integrationLoading } = useIntegrationDetail({
+  const { integration } = useIntegrationInline({
     variables: {
       _id: integrationId,
     },
     skip: !integrationId,
   });
 
-  if (!conversationDetail && !integration) {
+  useEffect(() => {
+    if (!conversationId) {
+      return;
+    }
+    setExtraInfo(undefined);
+  }, [conversationId, setExtraInfo]);
+
+  if (!conversationId) {
     return <NoConversationSelected />;
   }
 
-  if (loading && !currentConversation && !integrationLoading) {
+  if (loading) {
     return (
       <div className="flex flex-col">
         <div className="h-12 border-b flex-none flex items-center px-6">
@@ -58,27 +74,40 @@ export const ConversationDetail = () => {
   }
 
   return (
-    <div className="flex h-full overflow-hidden">
-      <div className="flex flex-col h-full overflow-hidden flex-auto">
-        <ConversationContext.Provider
-          value={{
-            ...currentConversation,
-            ...conversationDetail,
-            integration,
-            loading,
-          }}
-        >
+    <ConversationContext.Provider
+      value={
+        {
+          ...currentConversation,
+          ...conversationDetail,
+          integration,
+          loading,
+        } as IConversation & {
+          integration?: IIntegration;
+          loading?: boolean;
+        }
+      }
+    >
+      <div className="flex h-full overflow-hidden">
+        <div className="flex flex-col h-full overflow-hidden flex-auto">
           <ConversationHeader />
           <Separator />
-          <ConversationDetailLayout input={<MessageInput />}>
+          <ConversationDetailLayout
+            input={
+              <MessageInputIntegrationWrapper>
+                <MessageInput />
+              </MessageInputIntegrationWrapper>
+            }
+          >
             {integration?.kind &&
               ['messenger', 'lead'].includes(integration?.kind) && (
                 <ConversationMessages />
               )}
             <ConversationIntegrationDetail />
           </ConversationDetailLayout>
-        </ConversationContext.Provider>
+          <ConversationMarkAsReadEffect />
+        </div>
+        <ConversationSideWidget />
       </div>
-    </div>
+    </ConversationContext.Provider>
   );
 };

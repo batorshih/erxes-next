@@ -2,6 +2,7 @@ import { gql, useQuery } from '@apollo/client';
 import {
   EnumCursorDirection,
   mergeCursorData,
+  parseDateRangeFromString,
   useRecordTableCursor,
   validateFetchMore,
 } from 'erxes-ui';
@@ -55,7 +56,7 @@ const generateFilters = (searchParams: URLSearchParams) => {
 
   if (queryParams.createdAt) {
     filters.createdAt = {
-      value: queryParams.createdAt,
+      value: parseDateRangeFromString(queryParams.createdAt)?.from,
       operator: queryParams.createdAtOperator || undefined,
     };
   }
@@ -87,9 +88,8 @@ export const useLogs = () => {
     sessionKey: LOGS_CURSOR_SESSION_KEY,
   });
 
-  const { data, loading, fetchMore } = useQuery<LogsMainListQueryResponse>(
-    gql(LOGS_MAIN_LIST),
-    {
+  const { data, loading, error, fetchMore } =
+    useQuery<LogsMainListQueryResponse>(LOGS_MAIN_LIST, {
       variables: {
         filters: generateFilters(searchParams),
         cursor: cursor ?? undefined,

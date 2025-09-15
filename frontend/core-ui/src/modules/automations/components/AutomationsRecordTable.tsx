@@ -1,9 +1,9 @@
 import { useQuery } from '@apollo/client';
 import { IconAffiliate, IconSettings } from '@tabler/icons-react';
 import { Breadcrumb, Button, RecordTable, Separator, Spinner } from 'erxes-ui';
-import { IPageInfo, PageHeader } from 'ui-modules';
-import { AUTOMATIONS_MAIN_LIST } from '../graphql/automationQueries';
-import { IAutomationDoc } from '../types';
+import { Link } from 'react-router-dom';
+import { PageHeader } from 'ui-modules';
+
 import { automationColumns } from './AutomationColumns';
 import { AutomationRecordTableFilters } from './AutomationRecordTableFilters';
 import { Link } from 'react-router-dom';

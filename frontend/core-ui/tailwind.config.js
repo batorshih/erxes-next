@@ -6,7 +6,7 @@ module.exports = {
   content: [
     join(
       __dirname,
-      '{src,pages,components,app,modules}/**/*!(*.stories|*.spec).{ts,tsx,html}',
+      '{src,pages,components,app,modules}/**/!(*.stories|*.spec).{ts,tsx,html}',
     ),
     'frontend/libs/erxes-ui/src/**/!(*.stories|*.spec).{ts,tsx,html}',
     'frontend/libs/ui-modules/src/**/!(*.stories|*.spec).{ts,tsx,html}',
@@ -50,6 +50,7 @@ module.exports = {
         },
         success: 'hsl(var(--success))',
         warning: 'hsl(var(--warning))',
+        info: 'hsl(var(--info))',
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
@@ -63,6 +64,13 @@ module.exports = {
           foreground: 'hsl(var(--accent-foreground))',
         },
         sidebar: 'hsl(var(--sidebar-background))',
+        chart: {
+          1: 'hsl(var(--chart-1))',
+          2: 'hsl(var(--chart-2))',
+          3: 'hsl(var(--chart-3))',
+          4: 'hsl(var(--chart-4))',
+          5: 'hsl(var(--chart-5))',
+        },
       },
       borderRadius: {
         lg: `var(--radius)`,
@@ -70,7 +78,7 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)',
       },
       spacing: {
-        cell: '34px',
+        cell: '33px',
       },
       fontFamily: {
         sans: ['var(--font-sans)', ...fontFamily.sans],

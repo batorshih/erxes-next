@@ -25,8 +25,10 @@ export const receiveTrpcMessage = async (
   const { action, metaInfo, payload } = data;
   const { Integrations, ConversationMessages, Conversations } =
     await generateModels(subdomain);
-
-  const doc = JSON.parse(payload || '{}');
+  let doc = JSON.parse(JSON.stringify(payload) || '{}');
+  if (typeof doc === 'string') {
+    doc = JSON.parse(doc);
+  }
 
   if (action === 'get-create-update-customer') {
     const integration = await Integrations.findOne({
@@ -38,21 +40,19 @@ export const receiveTrpcMessage = async (
     }
 
     const { primaryEmail, primaryPhone } = doc;
-
     let customer;
 
-    const getCustomer = async (selector) =>
-      await sendTRPCMessage({
+    const getCustomer = async (selector) => {
+      return await sendTRPCMessage({
         pluginName: 'core',
         method: 'query',
         module: 'customers',
         action: 'findOne',
-        input: { selector },
+        input: { query: selector },
       });
-
+    };
     if (primaryPhone) {
-      customer = await getCustomer({ primaryPhone });
-
+      customer = await getCustomer({ customerPrimaryPhone: primaryPhone });
       if (customer) {
         await sendTRPCMessage({
           pluginName: 'core',
@@ -94,7 +94,7 @@ export const receiveTrpcMessage = async (
   }
 
   if (action === 'create-or-update-conversation') {
-    const { conversationId, content, owner, updatedAt } = doc;
+    const { conversationId, content, owner, updatedAt, integrationId } = doc;
     let user;
 
     if (owner) {
@@ -104,7 +104,7 @@ export const receiveTrpcMessage = async (
         module: 'users',
         action: 'findOne',
         input: {
-          doc: {
+          query: {
             'details.operatorPhone': owner,
           },
         },
@@ -116,13 +116,14 @@ export const receiveTrpcMessage = async (
     if (conversationId) {
       if (!assignedUserId) {
         const existingConversation = await Conversations.findOne({
-          _id: conversationId,
-        });
+          $and: [{ _id: conversationId }, { integrationId: integrationId }],
+        }).lean();
 
         assignedUserId = existingConversation?.assignedUserId || null;
       }
+
       const conversation = await Conversations.findOne({
-        _id: conversationId,
+        $and: [{ _id: conversationId }, { integrationId: integrationId }],
       }).lean();
 
       if (conversation) {
@@ -152,7 +153,6 @@ export const receiveTrpcMessage = async (
     }
 
     doc.assignedUserId = assignedUserId;
-
     const conversation = await Conversations.createConversation(doc);
 
     return sendSuccess({ _id: conversation._id });

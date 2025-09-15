@@ -1,20 +1,11 @@
-import {
-  IconAlignLeft,
-  IconCalendarPlus,
-  IconHash,
-  IconPencil,
-  IconTrash,
-} from '@tabler/icons-react';
-import { Cell, ColumnDef } from '@tanstack/table-core';
+import { IconAlignLeft, IconCalendarPlus, IconHash } from '@tabler/icons-react';
+import { ColumnDef } from '@tanstack/table-core';
 import {
   Badge,
-  Button,
   Input,
   RecordTable,
-  RecordTableCellContent,
-  RecordTableCellDisplay,
-  RecordTableCellTrigger,
-  RecordTablePopover,
+  RecordTableInlineCell,
+  Popover,
   RelativeDateDisplay,
   Textarea,
   TextOverflowTooltip,
@@ -23,28 +14,10 @@ import {
 import { useSetAtom } from 'jotai';
 import { renderingBrandDetailAtom } from '../state';
 import { IBrand } from '../types';
-
-const MoreCell = ({ cell }: { cell: Cell<IBrand, unknown> }) => {
-  const [, setOpen] = useQueryState('brand_id');
-  const setRenderingBrandDetail = useSetAtom(renderingBrandDetailAtom);
-  const { _id } = cell.row.original;
-  return (
-    <RecordTable.MoreButton
-      className="w-full h-full"
-      onClick={() => {
-        setOpen(_id);
-        setRenderingBrandDetail(false);
-      }}
-    />
-  );
-};
+import { useState } from 'react';
+import { useBrandsEdit } from '@/settings/brands/hooks/useBrandsEdit';
 
 export const brandsColumns: ColumnDef<IBrand>[] = [
-  {
-    id: 'more',
-    cell: MoreCell,
-    size: 33,
-  },
   RecordTable.checkboxColumn as ColumnDef<IBrand>,
   {
     id: 'name',
@@ -53,15 +26,56 @@ export const brandsColumns: ColumnDef<IBrand>[] = [
       <RecordTable.InlineHead label="brand name" icon={IconAlignLeft} />
     ),
     cell: ({ cell }) => {
+      const [, setBrandDetail] = useQueryState('brand_id');
+      const setRenderingBrandDetail = useSetAtom(renderingBrandDetailAtom);
+      const { _id, name } = cell.row.original;
+      const [open, setOpen] = useState<boolean>(false);
+      const [_name, setName] = useState<string>(name);
+
+      const { handleEdit, loading } = useBrandsEdit();
+      const onSave = () => {
+        if (name !== _name) {
+          handleEdit(
+            {
+              variables: {
+                id: _id,
+                name: _name,
+              },
+            },
+            ['name'],
+          );
+        }
+      };
+      const onChange = (el: React.ChangeEvent<HTMLInputElement>) => {
+        setName(el.currentTarget.value);
+      };
+
       return (
-        <RecordTablePopover>
-          <RecordTableCellTrigger>
-            {cell.getValue() as string}
-          </RecordTableCellTrigger>
-          <RecordTableCellContent>
-            <Input value={cell.getValue() as string} />
-          </RecordTableCellContent>
-        </RecordTablePopover>
+        <Popover
+          open={open}
+          onOpenChange={(open) => {
+            setOpen(open);
+            if (!open) {
+              onSave();
+            }
+          }}
+        >
+          <RecordTableInlineCell.Trigger>
+            <Badge
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                setRenderingBrandDetail(true);
+                setBrandDetail(cell.row.original._id);
+              }}
+            >
+              {cell.getValue() as string}
+            </Badge>
+          </RecordTableInlineCell.Trigger>
+          <RecordTableInlineCell.Content className="min-w-72">
+            <Input value={_name} onChange={onChange} disabled={loading} />
+          </RecordTableInlineCell.Content>
+        </Popover>
       );
     },
     size: 250,
@@ -73,15 +87,48 @@ export const brandsColumns: ColumnDef<IBrand>[] = [
       <RecordTable.InlineHead label="description" icon={IconHash} />
     ),
     cell: ({ cell }) => {
+      const { _id, description, name } = cell.row.original;
+      const [open, setOpen] = useState<boolean>(false);
+      const [_description, setDescription] = useState<string>(description);
+      const { handleEdit, loading } = useBrandsEdit();
+      const onSave = () => {
+        if (_description !== description) {
+          handleEdit(
+            {
+              variables: {
+                id: _id,
+                name: name,
+                description: _description,
+              },
+            },
+            ['description', 'name'],
+          );
+        }
+      };
+      const onChange = (el: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setDescription(el.currentTarget.value);
+      };
       return (
-        <RecordTablePopover>
-          <RecordTableCellTrigger>
+        <Popover
+          open={open}
+          onOpenChange={(open) => {
+            setOpen(open);
+            if (!open) {
+              onSave();
+            }
+          }}
+        >
+          <RecordTableInlineCell.Trigger>
             <TextOverflowTooltip value={cell.getValue() as string} />
-          </RecordTableCellTrigger>
-          <RecordTableCellContent>
-            <Textarea value={cell.getValue() as string} />
-          </RecordTableCellContent>
-        </RecordTablePopover>
+          </RecordTableInlineCell.Trigger>
+          <RecordTableInlineCell.Content>
+            <Textarea
+              value={_description}
+              onChange={onChange}
+              disabled={loading}
+            />
+          </RecordTableInlineCell.Content>
+        </Popover>
       );
     },
     size: 350,
@@ -92,14 +139,9 @@ export const brandsColumns: ColumnDef<IBrand>[] = [
     header: () => <RecordTable.InlineHead label="code" icon={IconHash} />,
     cell: ({ cell }) => {
       return (
-        <RecordTablePopover>
-          <RecordTableCellTrigger>
-            <Badge variant={'secondary'}>{cell.getValue() as number}</Badge>
-          </RecordTableCellTrigger>
-          <RecordTableCellContent>
-            <Input value={cell.getValue() as string} />
-          </RecordTableCellContent>
-        </RecordTablePopover>
+        <RecordTableInlineCell>
+          <Badge>{cell.getValue() as string}</Badge>
+        </RecordTableInlineCell>
       );
     },
   },
@@ -112,9 +154,9 @@ export const brandsColumns: ColumnDef<IBrand>[] = [
     cell: ({ cell }) => {
       return (
         <RelativeDateDisplay value={cell.getValue() as string} asChild>
-          <RecordTableCellDisplay>
+          <RecordTableInlineCell>
             <RelativeDateDisplay.Value value={cell.getValue() as string} />
-          </RecordTableCellDisplay>
+          </RecordTableInlineCell>
         </RelativeDateDisplay>
       );
     },

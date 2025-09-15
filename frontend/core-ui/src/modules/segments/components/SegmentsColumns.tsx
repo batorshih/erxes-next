@@ -1,7 +1,7 @@
 import { ColumnDef } from '@tanstack/table-core';
 import {
   RecordTable,
-  RecordTableCellDisplay,
+  RecordTableInlineCell,
   RecordTableTree,
   useQueryState,
   Button,
@@ -35,9 +35,9 @@ const columns: ColumnDef<{ order: string; hasChildren: boolean } & ISegment>[] =
       header: () => <RecordTable.InlineHead label="Description" />,
       cell: ({ cell }) => {
         return (
-          <RecordTableCellDisplay>
+          <RecordTableInlineCell>
             {cell.getValue() as string}
-          </RecordTableCellDisplay>
+          </RecordTableInlineCell>
         );
       },
     },
@@ -48,9 +48,9 @@ const columns: ColumnDef<{ order: string; hasChildren: boolean } & ISegment>[] =
       cell: ({ cell }) => {
         const { count } = cell.row.original;
         return (
-          <RecordTableCellDisplay>
+          <RecordTableInlineCell>
             {cell.getValue() as string}
-          </RecordTableCellDisplay>
+          </RecordTableInlineCell>
         );
       },
     },
@@ -60,7 +60,7 @@ const columns: ColumnDef<{ order: string; hasChildren: boolean } & ISegment>[] =
       cell: ({ cell }) => {
         const [, setOpen] = useQueryState('segmentId');
         return (
-          <RecordTableCellDisplay>
+          <RecordTableInlineCell>
             <Button
               variant="ghost"
               className="w-full h-full"
@@ -68,7 +68,7 @@ const columns: ColumnDef<{ order: string; hasChildren: boolean } & ISegment>[] =
             >
               <IconEdit className="hover:text-accent-foreground" />
             </Button>
-          </RecordTableCellDisplay>
+          </RecordTableInlineCell>
         );
       },
       size: 40,

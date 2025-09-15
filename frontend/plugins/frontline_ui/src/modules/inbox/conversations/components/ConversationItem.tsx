@@ -8,8 +8,8 @@ import {
   useQueryState,
 } from 'erxes-ui';
 import { useConversationContext } from '../hooks/useConversationContext';
-import { useIntegrationDetail } from '@/integrations/hooks/useIntegrations';
-import { BrandsInline, currentUserState, CustomerInline } from 'ui-modules';
+import { useIntegrationInline } from '@/integrations/hooks/useIntegrations';
+import { BrandsInline, currentUserState, CustomersInline } from 'ui-modules';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { activeConversationState } from '../states/activeConversationState';
 import { ConversationIntegrationBadge } from '@/integrations/components/IntegrationBadge';
@@ -39,8 +39,15 @@ export const ConversationItem = () => {
         <CustomerInline.Provider customer={customer}>
           <div className="flex w-full gap-3 leading-tight">
             <ConversationSelector />
-            <div className="flex-1 space-y-1 truncate">
-              <CustomerInline.Title className="truncate" />
+            <div className="flex-1 space-y-1">
+              <div className="flex gap-1 items-center">
+                <CustomersInline.Title className="truncate" />
+                <div className="ml-auto text-accent-foreground">
+                  {createdAt && (
+                    <RelativeDateDisplay.Value value={updatedAt || createdAt} />
+                  )}
+                </div>
+              </div>
               <div className="font-normal text-accent-foreground text-xs">
                 <BrandsInline
                   brandIds={[brandId || '']}
@@ -48,12 +55,9 @@ export const ConversationItem = () => {
                 />
               </div>
             </div>
-            <div className="ml-auto text-accent-foreground font-medium">
-              <RelativeDateDisplay.Value value={updatedAt || createdAt} />
-            </div>
           </div>
           <ConversationItemContent />
-        </CustomerInline.Provider>
+        </CustomersInline.Provider>
       </ConversationContainer>
     );
   }
@@ -79,6 +83,18 @@ export const ConversationItem = () => {
 
 export const ConversationItemContent = () => {
   const { content } = useConversationContext();
+  if (!content) return null;
+
+  if (content.includes('callDirection/')) {
+    const callDirection = content.split('callDirection/')[1];
+
+    return (
+      <div className="font-medium">
+        {callDirection === 'INCOMING' ? 'Incoming Call' : 'Outgoing Call'}
+      </div>
+    );
+  }
+
   return (
     <div className="truncate w-full h-4 [&_*]:text-sm [&_*]:leading-tight [&_*]:font-medium">
       <BlockEditorReadOnly content={content} />

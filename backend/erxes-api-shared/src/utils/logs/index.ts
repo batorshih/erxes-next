@@ -1,7 +1,8 @@
+import { checkServiceRunning } from '../utils';
 import { ILogDoc } from '../../core-types';
 import { createMQWorkerWithListeners, sendWorkerQueue } from '../mq-worker';
 import { redis } from '../redis';
-import { initializePluginConfig, isEnabled } from '../service-discovery';
+import { initializePluginConfig } from '../service-discovery';
 
 export const logHandler = async (
   resolver: () => Promise<any> | any,
@@ -10,7 +11,7 @@ export const logHandler = async (
   onError?: any,
   skipSaveResult?: boolean,
 ) => {
-  if (!(await isEnabled('logs'))) {
+  if (!(await checkServiceRunning('logs'))) {
     return await resolver();
   }
 
@@ -93,6 +94,14 @@ export type IAfterProcessRule =
   | AfterAPIRequest
   | AfterAuth;
 
+export type TAfterProcessRule = {
+  AfterMutation: AfterMutation;
+  CreateDocument: CreateDocument;
+  UpdatedDocument: UpdatedDocument;
+  AfterAPIRequest: AfterAPIRequest;
+  AfterAuth: AfterAuth;
+};
+
 export interface AfterProcessConfigs {
   rules: IAfterProcessRule[];
   onAfterMutation?: (
@@ -104,18 +113,25 @@ export interface AfterProcessConfigs {
     args: { userId: string; email: string; result: string },
   ) => void;
   onAfterApiRequest?: (context: IContext, args: any) => void;
-  onDocumentUpdated?: (
+  onDocumentUpdated?: <TDocument = any>(
     context: IContext,
     args: {
-      fullDocument: any;
-      prevDocument: any;
+      contentType: string;
+      fullDocument: TDocument;
+      prevDocument: TDocument;
       updateDescription: {
         updatedFields: { [key: string]: any };
         removedFields: string[];
       };
     },
   ) => void;
-  onDocumentCreated?: (context: IContext, args: any) => void;
+  onDocumentCreated?: <TDocument = any>(
+    context: IContext,
+    args: {
+      contentType: string;
+      fullDocument: TDocument;
+    },
+  ) => void;
 }
 
 export const startAfterProcess = async (

@@ -4,6 +4,7 @@ import {
   Dialog,
   RadioGroup,
   Tabs,
+  ToggleGroup,
 } from 'erxes-ui/components';
 import { useEffect, useId, useRef, useState } from 'react';
 import { getActiveTab } from '../utils/getActiveTab';
@@ -57,23 +58,20 @@ export const FilterDialogDateView = ({ filterKey }: { filterKey: string }) => {
             {filterKey}
           </Dialog.Title>
           <div>
-            <Tabs.List size="sm">
-              <Tabs.Trigger value="day" size="sm">
-                Day
-              </Tabs.Trigger>
-              <Tabs.Trigger value="month" size="sm">
-                Month
-              </Tabs.Trigger>
-              <Tabs.Trigger value="quarter" size="sm">
-                Quarter
-              </Tabs.Trigger>
-              <Tabs.Trigger value="halfYear" size="sm">
-                Half Year
-              </Tabs.Trigger>
-              <Tabs.Trigger value="year" size="sm">
-                Year
-              </Tabs.Trigger>
-            </Tabs.List>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              size="sm"
+              value={tabs}
+              onValueChange={setTabs}
+              className="inline-flex"
+            >
+              <ToggleGroup.Item value="day">Day</ToggleGroup.Item>
+              <ToggleGroup.Item value="month">Month</ToggleGroup.Item>
+              <ToggleGroup.Item value="quarter">Quarter</ToggleGroup.Item>
+              <ToggleGroup.Item value="halfYear">Half Year</ToggleGroup.Item>
+              <ToggleGroup.Item value="year">Year</ToggleGroup.Item>
+            </ToggleGroup>
           </div>
         </Dialog.Header>
         <div className="border-y border-muted py-6 flex justify-center h-[22rem] overflow-auto">
@@ -220,7 +218,6 @@ const DateFilterRadioGroupItem = ({
 
   return (
     <Button
-      size="sm"
       variant="secondary"
       className="shadow-none has-[[data-state=checked]]:border-ring has-[[data-state=checked]]:bg-primary has-[[data-state=checked]]:text-primary-foreground has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ring/70 capitalize"
       onClick={() => {

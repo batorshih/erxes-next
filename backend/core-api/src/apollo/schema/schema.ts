@@ -141,6 +141,17 @@ import {
   types as LogsTypes,
 } from '@/logs/graphql/schema';
 
+import {
+  mutations as NotificationsMutations,
+  queries as NotificationsQueries,
+  types as NotificationsTypes,
+} from '@/notifications/graphql/schema';
+import{
+  mutations as InternalNoteMutations,
+  queries as InternalNoteQueries,
+  types as InternalNoteTypes,
+} from '@/internalNote/graphql/schemas';
+
 export const types = `
     enum CacheControlScope {
       PUBLIC
@@ -179,6 +190,8 @@ export const types = `
     ${DocumentTypes}
     ${AutomationsTypes}
     ${LogsTypes}
+    ${NotificationsTypes}
+    ${InternalNoteTypes}
   `;
 
 export const queries = `
@@ -206,6 +219,8 @@ export const queries = `
     ${DocumentQueries}
     ${AutomationsQueries}
     ${LogsQueries}
+     ${NotificationsQueries}
+    ${InternalNoteQueries}
   `;
 
 export const mutations = `
@@ -232,6 +247,8 @@ export const mutations = `
     ${UsersGroupMutations}
     ${DocumentMutations}
     ${AutomationsMutations}
+    ${NotificationsMutations}
+    ${InternalNoteMutations}
   `;
 
 export default { types, queries, mutations };

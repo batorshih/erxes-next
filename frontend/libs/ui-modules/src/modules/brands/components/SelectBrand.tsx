@@ -1,4 +1,14 @@
-import { ButtonProps, Combobox, Command, Popover } from 'erxes-ui';
+import {
+  cn,
+  Combobox,
+  Command,
+  Filter,
+  Form,
+  RecordTableInlineCell,
+  Popover,
+  useFilterContext,
+  useQueryState,
+} from 'erxes-ui';
 import { useBrands } from '../hooks/useBrands';
 import { IBrand } from '../types/brand';
 import { useDebounce } from 'use-debounce';
@@ -71,15 +81,208 @@ export const SelectBrand = React.forwardRef<
                 handleSelectBrand={handleSelectBrand}
               />
             ))}
-            <Combobox.FetchMore
-              fetchMore={() => handleFetchMore({})}
-              totalCount={totalCount}
-              currentLength={brands.length}
-            />
-          </Command.List>
-        </Command>
-      </Combobox.Content>
-    </Popover>
+            <Command.Separator className="my-1" />
+          </>
+        )}
+        {brands
+          .filter((brand) => !selectedBrands.some((b) => b._id === brand._id))
+          .map((brand) => (
+            <SelectBrandCommandItem key={brand._id} brand={brand} />
+          ))}
+        <Combobox.FetchMore
+          fetchMore={handleFetchMore}
+          totalCount={totalCount}
+          currentLength={brands.length}
+        />
+      </Command.List>
+    </Command>
+  );
+};
+
+export const SelectBrandFilterItem = () => {
+  return (
+    <Filter.Item value="brand">
+      <IconLabel />
+      Brand
+    </Filter.Item>
+  );
+};
+
+export const SelectBrandFilterView = ({
+  onValueChange,
+  queryKey,
+  mode = 'single',
+}: {
+  onValueChange?: (value: string[] | string) => void;
+  queryKey?: string;
+  mode?: 'single' | 'multiple';
+}) => {
+  const [brand, setBrand] = useQueryState<string[] | string>(
+    queryKey || 'brand',
+  );
+  const { resetFilterState } = useFilterContext();
+
+  return (
+    <Filter.View filterKey={queryKey || 'brand'}>
+      <SelectBrandProvider
+        mode={mode}
+        value={brand || (mode === 'single' ? '' : [])}
+        onValueChange={(value) => {
+          setBrand(value as string[] | string);
+          resetFilterState();
+          onValueChange?.(value);
+        }}
+      >
+        <SelectBrandContent />
+      </SelectBrandProvider>
+    </Filter.View>
+  );
+};
+
+export const SelectBrandFilterBar = ({
+  iconOnly,
+  onValueChange,
+  queryKey,
+  mode = 'single',
+}: {
+  iconOnly?: boolean;
+  onValueChange?: (value: string[] | string) => void;
+  queryKey?: string;
+  mode?: 'single' | 'multiple';
+}) => {
+  const [brand, setBrand] = useQueryState<string[] | string>(
+    queryKey || 'brand',
+  );
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Filter.BarItem queryKey={queryKey || 'brand'}>
+      <Filter.BarName>
+        <IconLabel />
+        {!iconOnly && 'Brand'}
+      </Filter.BarName>
+      <SelectBrandProvider
+        mode={mode}
+        value={brand || (mode === 'single' ? '' : [])}
+        onValueChange={(value) => {
+          if (value.length > 0) {
+            setBrand(value as string[] | string);
+          } else {
+            setBrand(null);
+          }
+          setOpen(false);
+          onValueChange?.(value);
+        }}
+      >
+        <Popover open={open} onOpenChange={setOpen}>
+          <Popover.Trigger asChild>
+            <Filter.BarButton filterKey={queryKey || 'brand'}>
+              <SelectBrandValue />
+            </Filter.BarButton>
+          </Popover.Trigger>
+          <Combobox.Content>
+            <SelectBrandContent />
+          </Combobox.Content>
+        </Popover>
+      </SelectBrandProvider>
+    </Filter.BarItem>
+  );
+};
+
+export const SelectBrandInlineCell = ({
+  onValueChange,
+  scope,
+  ...props
+}: Omit<React.ComponentProps<typeof SelectBrandProvider>, 'children'> & {
+  scope?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <SelectBrandProvider
+      onValueChange={(value) => {
+        onValueChange?.(value);
+        setOpen(false);
+      }}
+      {...props}
+    >
+      <Popover open={open} onOpenChange={setOpen}>
+        <RecordTableInlineCell.Trigger>
+          <SelectBrandValue placeholder={''} />
+        </RecordTableInlineCell.Trigger>
+        <RecordTableInlineCell.Content>
+          <SelectBrandContent />
+        </RecordTableInlineCell.Content>
+      </Popover>
+    </SelectBrandProvider>
+  );
+};
+
+export const SelectBrandFormItem = ({
+  onValueChange,
+  className,
+  placeholder,
+  ...props
+}: Omit<React.ComponentProps<typeof SelectBrandProvider>, 'children'> & {
+  className?: string;
+  placeholder?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <SelectBrandProvider
+      onValueChange={(value) => {
+        onValueChange?.(value);
+        setOpen(false);
+      }}
+      {...props}
+    >
+      <Popover open={open} onOpenChange={setOpen}>
+        <Form.Control>
+          <Combobox.Trigger className={cn('w-full shadow-xs', className)}>
+            <SelectBrandValue placeholder={placeholder} />
+          </Combobox.Trigger>
+        </Form.Control>
+
+        <Combobox.Content>
+          <SelectBrandContent />
+        </Combobox.Content>
+      </Popover>
+    </SelectBrandProvider>
+  );
+};
+
+SelectBrandFormItem.displayName = 'SelectBrandFormItem';
+
+const SelectBrandRoot = React.forwardRef<
+  React.ElementRef<typeof Combobox.Trigger>,
+  Omit<React.ComponentProps<typeof SelectBrandProvider>, 'children'> &
+    React.ComponentProps<typeof Combobox.Trigger> & {
+      placeholder?: string;
+    }
+>(({ onValueChange, className, mode, value, placeholder, ...props }, ref) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <SelectBrandProvider
+      onValueChange={(value) => {
+        onValueChange?.(value);
+        setOpen(false);
+      }}
+      mode={mode}
+      value={value}
+    >
+      <Popover open={open} onOpenChange={setOpen}>
+        <Combobox.Trigger
+          ref={ref}
+          className={cn('w-full inline-flex', className)}
+          variant="outline"
+          {...props}
+        >
+          <SelectBrandValue placeholder={placeholder} />
+        </Combobox.Trigger>
+        <Combobox.Content>
+          <SelectBrandContent />
+        </Combobox.Content>
+      </Popover>
+    </SelectBrandProvider>
   );
 });
 

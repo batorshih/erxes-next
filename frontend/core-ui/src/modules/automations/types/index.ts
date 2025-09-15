@@ -1,9 +1,16 @@
-import { IAction, ITrigger } from 'ui-modules';
+import { STATUSES_BADGE_VARIABLES } from '@/automations/constants';
+import { Edge, EdgeProps, Node, ReactFlowInstance } from '@xyflow/react';
+import {
+  IAction,
+  IAutomationsActionConfigConstants,
+  IAutomationsTriggerConfigConstants,
+  ITrigger,
+} from 'ui-modules';
 
 export interface AutomationConstants {
-  triggersConst: ITrigger[];
+  triggersConst: IAutomationsTriggerConfigConstants[];
   triggerTypesConst: string[];
-  actionsConst: any[];
+  actionsConst: IAutomationsActionConfigConstants[];
   propertyTypesConst: Array<{ value: string; label: string }>;
 }
 export interface ConstantsQueryResponse {
@@ -14,8 +21,8 @@ export type NodeData = {
   id: string;
   nodeIndex: number;
   label: string;
-  nodeType: 'trigger' | 'action';
-  icon?: React.ReactNode;
+  nodeType: AutomationNodeType;
+  icon?: string;
   description?: string;
   type?: string;
   category?: string;
@@ -24,6 +31,13 @@ export type NodeData = {
   outputs?: number;
   color?: string;
   error?: string;
+  isCustom?: boolean;
+  nextActionId?: string;
+  actionId?: string;
+  beforeTitleContent?: (
+    id: string,
+    type: AutomationNodeType,
+  ) => React.ReactNode;
 };
 
 export interface IAutomationDoc {
@@ -53,29 +67,50 @@ export interface IAutomation extends IAutomationDoc {
   _id: string;
 }
 
-export interface IAutomationHistoryAction {
-  createdAt?: Date;
-  actionId: string;
-  actionType: string;
-  actionConfig?: any;
-  nextActionId?: string;
-  result?: any;
+export type AutomationDropHandlerParams = {
+  /** The drag event triggered when an item is dropped onto the drop target. */
+  event: React.DragEvent<HTMLDivElement>;
+  /** Instance of React Flow to interact with the flow canvas and nodes. */
+  reactFlowInstance: ReactFlowInstance<Node<NodeData>, Edge<EdgeProps>> | null;
+  triggers: ITrigger[];
+  actions: IAction[];
+};
+
+export type TDraggingNode = {
+  nodeType: AutomationNodeType;
+  type: string;
+  label: string;
+  description: string;
+  icon: string;
+  isCustom?: boolean;
+  awaitingToConnectNodeId?: string;
+};
+export type StatusBadgeValue =
+  (typeof STATUSES_BADGE_VARIABLES)[keyof typeof STATUSES_BADGE_VARIABLES];
+
+export enum AutomationsHotKeyScope {
+  Builder = 'automation-builder',
+  BuilderSideBar = 'automation-builder-sidebar',
+  BuilderPanel = 'automation-builder-panel',
+  HistoriesFilter = 'automation-histories-filter',
 }
 
-export interface IAutomationHistory {
-  _id: string;
-  createdAt: Date;
-  modifiedAt?: Date;
-  automationId: string;
-  triggerId: string;
-  triggerType: string;
-  triggerConfig?: any;
-  nextActionId?: string;
-  targetId: string;
-  target: any;
-  status: string;
-  description: string;
-  actions?: IAutomationHistoryAction[];
-  startWaitingDate?: Date;
-  waitingActionId?: string;
+export enum AutomationsPath {
+  Index = '/automations',
+  Detail = '/edit/:id',
+}
+
+export enum AutomationNodeType {
+  Trigger = 'trigger',
+  Action = 'action',
+}
+
+export enum AutomationNodesType {
+  Triggers = 'triggers',
+  Actions = 'actions',
+}
+
+export enum AutomationBuilderTabsType {
+  Builder = 'builder',
+  History = 'history',
 }

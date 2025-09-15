@@ -68,11 +68,9 @@ const TagsTypeFilterBar = () => {
     'contentType',
   );
   const { resetFilterState } = useFilterContext();
-  if (!contentType) {
-    return;
-  }
+
   return (
-    <Filter.BarItem>
+    <Filter.BarItem queryKey="contentType">
       <Filter.BarName className="whitespace-nowrap">
         <IconTagStarred />
         Tags type
@@ -85,7 +83,6 @@ const TagsTypeFilterBar = () => {
           resetFilterState();
         }}
       />
-      <Filter.BarClose filterKey="contentType" />
     </Filter.BarItem>
   );
 };

@@ -1,40 +1,37 @@
-import { Button, Skeleton, useQueryState } from 'erxes-ui';
-import { IconArrowLeft, IconUserFilled } from '@tabler/icons-react';
+import { cn, Filter, Skeleton } from 'erxes-ui';
 import { useConversationListContext } from '../hooks/useConversationListContext';
+import { ConversationFilterBar } from '@/inbox/conversations/components/ConversationsFilter';
 
 export const ConversationsHeader = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  const [detailView, setDetailView] = useQueryState<boolean>('detailView');
-
-  if (!detailView) return <div className="pl-4 pr-4 py-3">{children}</div>;
-
   return (
-    <div className="pl-6 pr-4 py-3">
-      <Button
-        variant="ghost"
-        className="text-muted-foreground w-full justify-start mb-5 px-2"
-        onClick={() => setDetailView(false)}
-      >
-        <IconArrowLeft />
-        <span>Back to channels</span>
-      </Button>
-      <Button variant="ghost" className="w-full justify-start mb-1 px-2">
-        <IconUserFilled />
-        <span>Team Inbox</span>
-        <ConversationCount />
-      </Button>
-      {children}
-    </div>
+    <Filter id="conversations-filter-bar">
+      <div className="pl-6 pr-4 py-2 space-y-1 bg-sidebar">
+        <div className="flex items-center justify-between">
+          {children}
+          <ConversationCount />
+        </div>
+        <ConversationFilterBar />
+        <Filter.Dialog>
+          <Filter.DialogDateView filterKey="created" />
+        </Filter.Dialog>
+      </div>
+    </Filter>
   );
 };
 
 const ConversationCount = () => {
   const { totalCount, loading } = useConversationListContext();
   return (
-    <span className="text-muted-foreground ml-auto inline-flex items-center gap-1">
+    <span
+      className={cn(
+        'text-accent-foreground inline-flex items-center gap-1 text-sm font-medium ml-auto truncate',
+        className,
+      )}
+    >
       {loading ? <Skeleton className="w-4 h-4" /> : totalCount} conversations
     </span>
   );

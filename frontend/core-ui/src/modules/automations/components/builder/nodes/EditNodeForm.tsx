@@ -1,3 +1,5 @@
+import { TAutomationBuilderForm } from '@/automations/utils/AutomationFormDefinitions';
+import { Button, Dialog, Input } from 'erxes-ui';
 import { useState } from 'react';
 import { Button, Dialog, Input } from 'erxes-ui';
 import { UseFormSetValue } from 'react-hook-form';
@@ -12,13 +14,9 @@ type Props = {
   callback: () => void;
 };
 
-export const EditForm = ({
-  id,
-  fieldName,
-  data,
-  setValue,
-  callback,
-}: Props) => {
+export const EditForm = ({ id, fieldName, data, callback }: Props) => {
+  const { setValue } = useFormContext<TAutomationBuilderForm>();
+
   const { nodeIndex, label, description } = data || {};
 
   const [doc, setDoc] = useState({
@@ -33,9 +31,16 @@ export const EditForm = ({
   };
 
   const handleSave = () => {
-    setValue(`detail.${fieldName}.${nodeIndex}.label`, doc.label);
-    setValue(`detail.${fieldName}.${nodeIndex}.description`, doc.description);
-    setValue('activeNode', { ...data, id, ...doc });
+    setValue(
+      `${fieldName}.${nodeIndex}`,
+      {
+        ...data,
+        label: doc.label,
+        description: doc.description,
+      },
+      { shouldValidate: true, shouldDirty: true },
+    );
+
     callback();
   };
 

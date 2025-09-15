@@ -1,6 +1,4 @@
-import { useCustomersEdit } from '@/contacts/customers/customer-edit/hooks/useCustomerEdit';
 import { ContactsHotKeyScope } from '@/contacts/types/ContactsHotKeyScope';
-import { ApolloError } from '@apollo/client';
 import {
   IconCalendarPlus,
   IconChartBar,
@@ -15,29 +13,31 @@ import {
 import { ColumnDef } from '@tanstack/table-core';
 import {
   Avatar,
-  Badge,
-  EmailDisplay,
-  EmailListField,
-  FullNameField,
-  PhoneDisplay,
-  PhoneListField,
   RecordTable,
-  RecordTableCellContent,
-  RecordTableCellDisplay,
-  RecordTableCellTrigger,
-  RecordTablePopover,
+  RecordTableInlineCell,
   RelativeDateDisplay,
   SexCode,
   SexDisplay,
   SexField,
-  readFile,
+  readImage,
   useQueryState,
-  useToast,
+  PopoverScoped,
+  Badge,
+  FullNameValue,
 } from 'erxes-ui';
 import { useState } from 'react';
-import { ICustomer, SelectTags } from 'ui-modules';
+import {
+  CustomerEmails,
+  CustomerName,
+  CustomerOwner,
+  CustomerPhones,
+  ICustomer,
+  SelectTags,
+  useCustomerEdit,
+} from 'ui-modules';
 import { useSetAtom } from 'jotai';
 import { renderingCustomerDetailAtom } from '@/contacts/states/customerDetailStates';
+import clsx from 'clsx';
 
 const checkBoxColumn = RecordTable.checkboxColumn as ColumnDef<ICustomer>;
 
@@ -53,7 +53,7 @@ export const customersColumns: ColumnDef<ICustomer>[] = [
       return (
         <div className="flex items-center justify-center h-8">
           <Avatar size="lg">
-            <Avatar.Image src={readFile(cell.getValue() as string)} />
+            <Avatar.Image src={readImage(cell.getValue() as string)} />
             <Avatar.Fallback>
               {firstName?.charAt(0) ||
                 lastName?.charAt(0) ||
@@ -78,76 +78,34 @@ export const customersColumns: ColumnDef<ICustomer>[] = [
       const setRenderingCustomerDetail = useSetAtom(
         renderingCustomerDetailAtom,
       );
-      const { firstName, lastName, _id } = cell.row.original;
-      const { customersEdit } = useCustomersEdit();
-      const [_firstName, setFirstName] = useState(firstName);
-      const [_lastName, setLastName] = useState(lastName);
-      const [open, setOpen] = useState(false);
 
-      const onSave = () => {
-        if (_firstName !== firstName || _lastName !== lastName) {
-          customersEdit(
-            { variables: { _id, firstName: _firstName, lastName: _lastName } },
-            ['firstName', 'lastName'],
-          );
-        }
-      };
+      const {
+        firstName = '',
+        lastName = '',
+        _id,
+        middleName = '',
+      } = cell.row.original;
 
       return (
-        <RecordTablePopover
-          scope={ContactsHotKeyScope.CustomersPage + '.' + _id + '.Name'}
-          open={open}
-          onOpenChange={(open) => {
-            setOpen(open);
-            if (!open) {
-              onSave();
-            }
-          }}
+        <CustomerName
+          _id={_id}
+          firstName={firstName}
+          lastName={`${middleName || ''}${middleName ? ' ' : ''}${
+            lastName || ''
+          }`}
+          scope={clsx(ContactsHotKeyScope.CustomersPage, _id, 'Name')}
         >
-          <RecordTableCellTrigger>
-            <Badge
-              variant="secondary"
-              onClick={(e) => {
-                e.stopPropagation();
+          <RecordTableInlineCell.Trigger>
+            <RecordTableInlineCell.Anchor
+              onClick={() => {
                 setDetailOpen(_id);
                 setRenderingCustomerDetail(false);
               }}
             >
-              {firstName || lastName ? (
-                <span>
-                  {firstName} {lastName}
-                </span>
-              ) : (
-                <span className="text-muted-foreground">Unnamed customer</span>
-              )}
-            </Badge>
-          </RecordTableCellTrigger>
-          <RecordTableCellContent className="w-72" asChild>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                onSave();
-                setOpen(false);
-              }}
-            >
-              <FullNameField>
-                <FullNameField.FirstName
-                  value={_firstName || ''}
-                  onChange={(e) => {
-                    setFirstName(e.target.value);
-                  }}
-                />
-                <FullNameField.LastName
-                  value={_lastName || ''}
-                  onChange={(e) => {
-                    setLastName(e.target.value);
-                  }}
-                />
-              </FullNameField>
-              <button type="submit" className="sr-only" />
-            </form>
-          </RecordTableCellContent>
-        </RecordTablePopover>
+              <FullNameValue />
+            </RecordTableInlineCell.Anchor>
+          </RecordTableInlineCell.Trigger>
+        </CustomerName>
       );
     },
     size: 240,
@@ -157,76 +115,16 @@ export const customersColumns: ColumnDef<ICustomer>[] = [
     accessorKey: 'primaryEmail',
     header: () => <RecordTable.InlineHead label="Emails" icon={IconMail} />,
     cell: ({ cell }) => {
-      const {
-        primaryEmail,
-        _id,
-        emailValidationStatus: _emailValidationStatus,
-        emails,
-      } = cell.row.original;
-      const emailValidationStatus =
-        _emailValidationStatus === 'valid' ? 'verified' : 'unverified';
-
-      const { customersEdit } = useCustomersEdit();
-      const { toast } = useToast();
-      const _emails = [
-        ...(primaryEmail
-          ? [
-              {
-                email: primaryEmail,
-                status: emailValidationStatus as 'verified' | 'unverified',
-                isPrimary: true,
-              },
-            ]
-          : []),
-        ...(emails || []).map((email) => ({
-          email,
-          status: emailValidationStatus as 'verified' | 'unverified',
-        })),
-      ].filter(
-        (email, index, self) =>
-          index === self.findIndex((t) => t.email === email.email),
-      );
+      const { primaryEmail, _id, emailValidationStatus, emails } =
+        cell.row.original;
       return (
-        <RecordTablePopover
-          scope={ContactsHotKeyScope.CustomersPage + '.' + _id + '.Emails'}
-        >
-          <RecordTableCellTrigger>
-            <EmailDisplay emails={_emails} />
-          </RecordTableCellTrigger>
-          <RecordTableCellContent className="w-72">
-            <EmailListField
-              recordId={_id}
-              onValueChange={(newEmails) => {
-                const primaryEmail = newEmails.find((email) => email.isPrimary);
-                let newEmailValidationStatus;
-                if (primaryEmail?.status !== emailValidationStatus) {
-                  newEmailValidationStatus =
-                    primaryEmail?.status === 'verified' ? 'valid' : 'invalid';
-                }
-                customersEdit(
-                  {
-                    variables: {
-                      _id,
-                      primaryEmail: primaryEmail?.email || null,
-                      emails: newEmails
-                        .filter((email) => !email.isPrimary)
-                        .map((email) => email.email),
-                      emailValidationStatus: newEmailValidationStatus,
-                    },
-                    onError: (e: ApolloError) => {
-                      toast({
-                        title: 'Error',
-                        description: e.message,
-                      });
-                    },
-                  },
-                  ['primaryEmail', 'emails', 'emailValidationStatus'],
-                );
-              }}
-              emails={_emails}
-            />
-          </RecordTableCellContent>
-        </RecordTablePopover>
+        <CustomerEmails
+          primaryEmail={primaryEmail || ''}
+          _id={_id}
+          emailValidationStatus={emailValidationStatus}
+          emails={emails || []}
+          Trigger={RecordTableInlineCell.Trigger}
+        />
       );
     },
     size: 250,
@@ -236,75 +134,18 @@ export const customersColumns: ColumnDef<ICustomer>[] = [
     accessorKey: 'primaryPhone',
     header: () => <RecordTable.InlineHead label="Phones" icon={IconPhone} />,
     cell: ({ cell }) => {
-      const {
-        _id,
-        primaryPhone,
-        phones: _phones,
-        phoneValidationStatus: _phoneValidationStatus,
-      } = cell.row.original;
-      const phoneValidationStatus =
-        _phoneValidationStatus === 'valid' ? 'verified' : 'unverified';
-      const { customersEdit } = useCustomersEdit();
-      const { toast } = useToast();
-      const phones = [
-        ...(primaryPhone
-          ? [
-              {
-                phone: primaryPhone,
-                status: phoneValidationStatus as 'verified' | 'unverified',
-                isPrimary: true,
-              },
-            ]
-          : []),
-        ...(_phones || []).map((_phone) => ({
-          phone: _phone,
-          status: 'unverified' as 'verified' | 'unverified',
-        })),
-      ].filter(
-        (phone, index, self) =>
-          index === self.findIndex((t) => t.phone === phone.phone),
-      );
+      const { _id, primaryPhone, phones, phoneValidationStatus } =
+        cell.row.original;
+
       return (
-        <RecordTablePopover
-          scope={ContactsHotKeyScope.CustomersPage + '.' + _id + '.Phones'}
-        >
-          <RecordTableCellTrigger>
-            <PhoneDisplay phones={phones} />
-          </RecordTableCellTrigger>
-          <RecordTableCellContent>
-            <PhoneListField
-              recordId={_id}
-              phones={phones}
-              onValueChange={(newPhones) => {
-                const primaryPhone = newPhones.find((phone) => phone.isPrimary);
-                let newPhoneValidationStatus;
-                if (primaryPhone?.status !== phoneValidationStatus) {
-                  newPhoneValidationStatus =
-                    primaryPhone?.status === 'verified' ? 'valid' : 'invalid';
-                }
-                customersEdit(
-                  {
-                    variables: {
-                      _id,
-                      primaryPhone: primaryPhone?.phone || null,
-                      phones: newPhones
-                        .filter((phone) => !phone.isPrimary)
-                        .map((phone) => phone.phone),
-                      phoneValidationStatus: newPhoneValidationStatus,
-                    },
-                    onError: (e: ApolloError) => {
-                      toast({
-                        title: 'Error',
-                        description: e.message,
-                      });
-                    },
-                  },
-                  ['primaryPhone', 'phones', 'emailValidationStatus'],
-                );
-              }}
-            />
-          </RecordTableCellContent>
-        </RecordTablePopover>
+        <CustomerPhones
+          _id={_id}
+          primaryPhone={primaryPhone || ''}
+          phones={phones || []}
+          phoneValidationStatus={phoneValidationStatus}
+          scope={clsx(ContactsHotKeyScope.CustomersPage, _id, 'Phones')}
+          Trigger={RecordTableInlineCell.Trigger}
+        />
       );
     },
     size: 250,
@@ -343,37 +184,49 @@ export const customersColumns: ColumnDef<ICustomer>[] = [
     accessorKey: 'sex',
     header: () => <RecordTable.InlineHead label="Sex" icon={IconGenderMale} />,
     cell: ({ cell }) => {
-      const { customersEdit } = useCustomersEdit();
+      const { customerEdit } = useCustomerEdit();
       const [open, setOpen] = useState(false);
       const { _id } = cell.row.original;
       return (
-        <RecordTablePopover
+        <PopoverScoped
           scope={ContactsHotKeyScope.CustomersPage + '.' + _id + '.Sex'}
           open={open}
           onOpenChange={setOpen}
         >
-          <RecordTableCellTrigger>
+          <RecordTableInlineCell.Trigger>
             <SexDisplay value={cell.getValue() as SexCode} />
-          </RecordTableCellTrigger>
-          <RecordTableCellContent>
+          </RecordTableInlineCell.Trigger>
+          <RecordTableInlineCell.Content>
             <SexField
               value={cell.getValue() as SexCode}
               onValueChange={(value) => {
                 if (value !== (cell.getValue() as SexCode)) {
-                  customersEdit(
-                    {
-                      variables: { _id, sex: value },
-                    },
-                    ['sex'],
-                  );
+                  customerEdit({
+                    variables: { _id, sex: value },
+                  });
                 }
                 setOpen(false);
               }}
             />
-          </RecordTableCellContent>
-        </RecordTablePopover>
+          </RecordTableInlineCell.Content>
+        </PopoverScoped>
       );
     },
+  },
+  {
+    id: 'owner',
+    accessorKey: 'owner',
+    header: () => <RecordTable.InlineHead label="Owner" icon={IconUser} />,
+    cell: ({ cell }) => {
+      return (
+        <CustomerOwner
+          _id={cell.row.original._id}
+          ownerId={cell.row.original.ownerId || ''}
+          inTable
+        />
+      );
+    },
+    size: 250,
   },
   {
     id: 'lastSeenAt',
@@ -382,9 +235,9 @@ export const customersColumns: ColumnDef<ICustomer>[] = [
     cell: ({ cell }) => {
       return (
         <RelativeDateDisplay value={cell.getValue() as string} asChild>
-          <RecordTableCellDisplay>
+          <RecordTableInlineCell className="text-xs font-medium text-muted-foreground">
             <RelativeDateDisplay.Value value={cell.getValue() as string} />
-          </RecordTableCellDisplay>
+          </RecordTableInlineCell>
         </RelativeDateDisplay>
       );
     },
@@ -397,9 +250,9 @@ export const customersColumns: ColumnDef<ICustomer>[] = [
     ),
     cell: ({ cell }) => {
       return (
-        <RecordTableCellDisplay>
+        <RecordTableInlineCell>
           {cell.getValue() as number}
-        </RecordTableCellDisplay>
+        </RecordTableInlineCell>
       );
     },
   },
@@ -412,9 +265,9 @@ export const customersColumns: ColumnDef<ICustomer>[] = [
     cell: ({ cell }) => {
       return (
         <RelativeDateDisplay value={cell.getValue() as string} asChild>
-          <RecordTableCellDisplay>
+          <RecordTableInlineCell className="text-xs font-medium text-muted-foreground">
             <RelativeDateDisplay.Value value={cell.getValue() as string} />
-          </RecordTableCellDisplay>
+          </RecordTableInlineCell>
         </RelativeDateDisplay>
       );
     },

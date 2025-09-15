@@ -7,9 +7,16 @@ import { Link } from 'react-router-dom';
 
 export const AccountingHeader = ({
   children,
+  leftChildren,
+  returnLink,
+  returnText,
 }: {
   children?: React.ReactNode;
+  leftChildren?: React.ReactNode;
+  returnLink?: string;
+  returnText?: string;
 }) => {
+  const to = returnLink || "/accounting"
   return (
     <PageHeader>
       <PageHeader.Start>
@@ -17,11 +24,14 @@ export const AccountingHeader = ({
           <Breadcrumb.List className="gap-1">
             <Breadcrumb.Item>
               <Button variant="ghost" asChild>
-                <Link to="/accounting">
+                <Link to={to}>
                   <IconArrowsRightLeft />
-                  Transactions
+                  {`${returnText || 'Transactions'}`}
                 </Link>
               </Button>
+            </Breadcrumb.Item>
+            <Breadcrumb.Item>
+              {leftChildren}
             </Breadcrumb.Item>
           </Breadcrumb.List>
         </Breadcrumb>

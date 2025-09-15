@@ -16,9 +16,12 @@ import {
 
 import './automations';
 import { generateModels } from './connectionResolvers';
+import { documents } from './meta/documents';
 import { moduleObjects } from './meta/permission';
 import { tags } from './meta/tags';
 import './segments';
+import * as path from 'path';
+import rateLimit from 'express-rate-limit';
 
 const { DOMAIN, CLIENT_PORTAL_DOMAINS, ALLOWED_DOMAINS } = process.env;
 
@@ -37,20 +40,49 @@ app.use(
 
 app.use(cookieParser());
 
+const allowedOrigins = [
+  ...(DOMAIN ? [DOMAIN] : []),
+  ...(isDev ? ['http://localhost:3001', 'http://localhost:5173'] : []),
+  ...(ALLOWED_DOMAINS || '').split(','),
+  ...(CLIENT_PORTAL_DOMAINS || '').split(','),
+  ...(process.env.ALLOWED_ORIGINS || '').split(',').map((c) => c && RegExp(c)),
+];
+
 const corsOptions = {
   credentials: true,
-  origin: [
-    DOMAIN ? DOMAIN : 'http://localhost:3001',
-    ALLOWED_DOMAINS ? ALLOWED_DOMAINS : 'http://localhost:3200',
-    ...(CLIENT_PORTAL_DOMAINS || '').split(','),
-    ...(process.env.ALLOWED_ORIGINS || '')
-      .split(',')
-      .map((c) => c && RegExp(c)),
-  ],
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin.replace(/\/$/, ''))) {
+      callback(null, true);
+    } else {
+      console.error('Origin not allowed:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
 };
 
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(router);
+
+const fileLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+});
+
+app.get('/subscriptionPlugin.js', fileLimiter, async (_req, res) => {
+  const apolloSubscriptionPath = path.join(
+    require('path').resolve(
+      __dirname,
+      'apollo',
+      process.env.NODE_ENV === 'production'
+        ? 'subscription.js'
+        : 'subscription.ts',
+    ),
+  );
+
+  res.sendFile(apolloSubscriptionPath);
+});
 
 app.use(
   '/trpc',
@@ -79,10 +111,11 @@ httpServer.listen(port, async () => {
   await joinErxesGateway({
     name: 'core',
     port,
-    hasSubscriptions: false,
+    hasSubscriptions: true,
     meta: {
       permissions: moduleObjects,
       tags,
+      documents,
     },
   });
 });

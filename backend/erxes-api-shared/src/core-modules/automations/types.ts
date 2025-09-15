@@ -1,3 +1,5 @@
+import { IAction, ITrigger, IAutomationExecution } from './definitions';
+
 type IContext = {
   subdomain: string;
   processId?: string;
@@ -15,6 +17,7 @@ type ITriggerConfig = {
     label: string;
     description: string;
   }[];
+  connectableActionTypes?: string[];
 };
 
 type IActionConfig = {
@@ -23,19 +26,72 @@ type IActionConfig = {
   label: string;
   description: string;
   isAvailableOptionalConnect?: boolean;
+  emailRecipientsConst?: any;
+  connectableActionTypes?: string[];
 };
 
-export type AutomationConstants =
-  | { triggers: ITriggerConfig[]; actions?: IActionConfig }
-  | { triggers?: ITriggerConfig[]; actions: IActionConfig }
-  | { triggers: ITriggerConfig[]; actions: IActionConfig };
+export type IAutomationsBotsConfig = {
+  moduleName: string;
+  name: string;
+  label: string;
+  description: string;
+  logo: string;
+  totalCountQueryName: string;
+};
 
-export interface AutomationConfigs {
-  constants: AutomationConstants;
-  receiveActions?: (context: IContext, args: any) => Promise<any>;
+type IAutomationTriggersActionsConfig =
+  | {
+      triggers: IAutomationsTriggerConfig[];
+      actions?: IAutomationsActionConfig[];
+    }
+  | {
+      triggers?: IAutomationsTriggerConfig[];
+      actions: IAutomationsActionConfig[];
+    };
+
+export type AutomationConstants = IAutomationTriggersActionsConfig & {
+  bots?: IAutomationsBotsConfig[];
+};
+
+export interface AutomationWorkers {
+  receiveActions?: (
+    context: IContext,
+    args: {
+      moduleName: string;
+      collectionType: string;
+      actionType: string;
+      triggerType: string;
+      action: IAction;
+      execution: { _id: string } & IAutomationExecution;
+    },
+  ) => Promise<{
+    result: any;
+    waitCondition?: {
+      shouldCheckOptionalConnect: any[];
+      targetId?: string;
+      expectedState: Record<string, any>;
+      propertyName: string;
+      expectedStateConjunction: 'every' | 'some';
+    };
+  }>;
+
   getRecipientsEmails?: (context: IContext, args: any) => Promise<any>;
   replacePlaceHolders?: (context: IContext, args: any) => Promise<any>;
-  checkCustomTrigger?: (context: IContext, args: any) => Promise<any>;
+  checkCustomTrigger?: <TTarget = any, TConfig = any>(
+    context: IContext,
+    args: {
+      moduleName: string;
+      collectionType: string;
+      automationId: string;
+      trigger: ITrigger;
+      target: TTarget;
+      config: TConfig;
+    },
+  ) => Promise<boolean>;
+}
+
+export interface AutomationConfigs extends AutomationWorkers {
+  constants: AutomationConstants;
 }
 
 export interface IReplacePlaceholdersProps<TModels> {
@@ -86,3 +142,23 @@ export interface IPropertyProps<TModels> {
   relatedItems: any[];
   triggerType?: string;
 }
+
+export type AutomationExecutionSetWaitCondition =
+  | {
+      type: 'delay';
+      subdomain: string;
+      waitFor: number;
+      timeUnit: 'minute' | 'hour' | 'day' | 'month' | 'year';
+      startWaitingDate?: Date;
+    }
+  | {
+      type: 'checkObject';
+      contentType?: string;
+      shouldCheckOptionalConnect?: boolean;
+      targetId?: string;
+      expectedState: Record<string, any>;
+      propertyName: string;
+      expectedStateConjunction?: 'every' | 'some';
+      timeout?: Date;
+    }
+  | { type: 'isInSegment'; targetId: string; segmentId: string };

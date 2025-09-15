@@ -1,25 +1,29 @@
 import { lazy } from 'react';
 import {
-  createRoutesFromElements,
+  Navigate,
   Route,
   createBrowserRouter,
 } from 'react-router-dom';
 
+import { AutomationRoutes } from '@/app/components/AutomationRoutes';
 import { ContactsRoutes } from '@/app/components/ContactsRoutes';
+import { LogRoutes } from '@/app/components/LogRoutes';
+import { DefaultLayout } from '@/app/components/MainLayout';
+import { AppPath } from '@/types/paths/AppPath';
+import ForgotPasswordPage from '~/pages/auth/ForgotPasswordPage';
+import { ComponentsRoutes } from '../components/ComponentsRoutes';
+
+import { NotificationsRoutes } from '@/app/components/NotificationsRoutes';
 import { ProductsRoutes } from '@/app/components/ProductsRoutes';
+import { SegmentRoutes } from '@/app/components/SegmentsRoutes';
 import { SettingsRoutes } from '@/app/components/SettingsRoutes';
 import { getPluginsRoutes } from '@/app/hooks/usePluginsRouter';
 import { UserProvider } from '@/auth/providers/UserProvider';
 import { OrganizationProvider } from '@/organization/providers/OrganizationProvider';
-import { AppPath } from '@/types/paths/AppPath';
-import { DefaultLayout } from '@/app/components/MainLayout';
+import { lazy } from 'react';
 import { NotFoundPage } from '~/pages/not-found/NotFoundPage';
-import { OnBoarding } from '~/pages/onboarding/Onboarding';
 import { Providers } from '~/providers';
-import ForgotPasswordPage from '~/pages/auth/ForgotPasswordPage';
-import { SegmentRoutes } from '@/app/components/SegmentsRoutes';
-import { AutomationRoutes } from '@/app/components/AutomationRoutes';
-import { LogRoutes } from '@/app/components/LogRoutes';
+import { DocumentsRoutes } from '../components/DocumentsRoutes';
 
 const LoginPage = lazy(() => import('~/pages/auth/LoginPage'));
 
@@ -44,7 +48,10 @@ export const useCreateAppRouter = () => {
 
           <Route element={<UserProvider />}>
             <Route element={<DefaultLayout />}>
-              <Route path={AppPath.Index} element={<OnBoarding />} />
+              <Route
+                path={AppPath.Index}
+                element={<Navigate to={AppPath.MyInbox} />}
+              />
               <Route
                 path={AppPath.SettingsCatchAll}
                 element={<SettingsRoutes />}
@@ -62,10 +69,21 @@ export const useCreateAppRouter = () => {
                 element={<SegmentRoutes />}
               />
               <Route
-                path={AppPath.AutoamtionsCatchAll}
+                path={AppPath.AutomationsCatchAll}
                 element={<AutomationRoutes />}
               />
               <Route path={AppPath.LogsCatchAll} element={<LogRoutes />} />
+
+              <Route
+                path={AppPath.DocumentsCatchAll}
+                element={<DocumentsRoutes />}
+              />
+
+              <Route
+                path={AppPath.MyInboxCatchAll}
+                element={<NotificationsRoutes />}
+              />
+
               {...getPluginsRoutes()}
             </Route>
           </Route>

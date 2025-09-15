@@ -1,23 +1,29 @@
 import { useState } from 'react';
 import {
-  SelectMemberContext,
-  useSelectMemberContext,
-} from '../contexts/SelectMemberContext';
-import { IMember } from '../types/TeamMembers';
-import { MembersInline } from './MembersInline';
-import {
-  cn,
+  AvatarProps,
+  Button,
   Combobox,
   Command,
   Filter,
   Form,
   Popover,
-  RecordTableCellContent,
-  RecordTableCellTrigger,
-  RecordTablePopover,
+  PopoverScoped,
+  RecordTableInlineCell,
+  cn,
   useFilterContext,
   useQueryState,
 } from 'erxes-ui';
+import {
+  SelectMemberContext,
+  useSelectMemberContext,
+} from '../contexts/SelectMemberContext';
+
+import { IUser } from '../types/TeamMembers';
+import { IconPlus, IconUser } from '@tabler/icons-react';
+import { MembersInline } from './MembersInline';
+import React from 'react';
+import { currentUserState } from 'ui-modules/states';
+import { useAtomValue } from 'jotai';
 import { useDebounce } from 'use-debounce';
 import { useUsers } from 'ui-modules/modules';
 import { useAtomValue } from 'jotai';
@@ -29,19 +35,31 @@ const SelectMemberProvider = ({
   mode = 'single',
   value,
   onValueChange,
+  members,
+  setOpen,
+  allowUnassigned,
 }: {
   children: React.ReactNode;
   mode?: 'single' | 'multiple';
   value?: string[] | string;
-  onValueChange?: (value: string[] | string) => void;
+  onValueChange?: (value: string[] | string | null) => void;
+  members?: IUser[];
+  setOpen?: (open: boolean) => void;
+  allowUnassigned?: boolean;
 }) => {
   const [members, setMembers] = useState<IMember[]>([]);
   const isSingleMode = mode === 'single';
 
-  const onSelect = (member: IMember) => {
-    if (!member) return;
+  const onSelect = (member: IUser | null) => {
+    if (!member) {
+      setMembers([]);
+      onValueChange?.(mode === 'single' ? null : []);
+      setOpen?.(false);
+      return;
+    }
     if (isSingleMode) {
       setMembers([member]);
+      setOpen?.(false);
       return onValueChange?.(member._id);
     }
     const arrayValue = Array.isArray(value) ? value : [];
@@ -62,8 +80,8 @@ const SelectMemberProvider = ({
         onSelect,
         members,
         setMembers,
-        loading: false,
-        error: null,
+        loading: _members.length !== value?.length,
+        allowUnassigned: allowUnassigned || false,
       }}
     >
       {children}
@@ -76,10 +94,10 @@ const SelectMemberValue = ({
   size,
 }: {
   placeholder?: string;
-  size?: 'lg';
+  size?: AvatarProps['size'];
 }) => {
-  const { memberIds, members, setMembers } = useSelectMemberContext();
-
+  const { memberIds, members, setMembers, allowUnassigned } =
+    useSelectMemberContext();
   return (
     <MembersInline
       memberIds={memberIds}
@@ -87,6 +105,7 @@ const SelectMemberValue = ({
       updateMembers={setMembers}
       placeholder={placeholder}
       size={size}
+      allowUnassigned={allowUnassigned}
     />
   );
 };
@@ -114,11 +133,25 @@ const SelectMemberCommandItem = ({ user }: { user: IMember }) => {
   );
 };
 
+const SelectMemberNoAssigneeItem = () => {
+  const { onSelect, memberIds } = useSelectMemberContext();
+  return (
+    <Command.Item value="no-assignee" onSelect={() => onSelect(null)}>
+      <MembersInline
+        memberIds={[]}
+        placeholder="Unnamed user"
+        allowUnassigned
+      />
+      <Combobox.Check checked={!memberIds || memberIds.length === 0} />
+    </Command.Item>
+  );
+};
+
 const SelectMemberContent = () => {
   const [search, setSearch] = useState('');
   const [debouncedSearch] = useDebounce(search, 500);
-  const currentUser = useAtomValue(currentUserState) as IMember;
-  const { memberIds, members } = useSelectMemberContext();
+  const currentUser = useAtomValue(currentUserState) as IUser;
+  const { memberIds, members, allowUnassigned } = useSelectMemberContext();
   const { users, loading, handleFetchMore, totalCount, error } = useUsers({
     variables: {
       searchValue: debouncedSearch,
@@ -146,6 +179,7 @@ const SelectMemberContent = () => {
             <Command.Separator className="my-1" />
           </>
         )}
+        {!loading && allowUnassigned && <SelectMemberNoAssigneeItem />}
 
         {!loading &&
           [currentUser, ...users]
@@ -175,8 +209,18 @@ export const SelectMemberFilterItem = () => {
   );
 };
 
-export const SelectMemberFilterView = () => {
-  const [assignedTo, setAssignedTo] = useQueryState<string[]>('assignedTo');
+export const SelectMemberFilterView = ({
+  onValueChange,
+  queryKey,
+  mode = 'single',
+}: {
+  onValueChange?: (value: string[] | string | null) => void;
+  queryKey?: string;
+  mode?: 'single' | 'multiple';
+}) => {
+  const [assignedTo, setAssignedTo] = useQueryState<string[] | string>(
+    queryKey || 'assignedTo',
+  );
   const { resetFilterState } = useFilterContext();
 
   return (
@@ -195,8 +239,20 @@ export const SelectMemberFilterView = () => {
   );
 };
 
-export const SelectMemberFilterBar = () => {
-  const [assignedTo, setAssignedTo] = useQueryState<string[]>('assignedTo');
+export const SelectMemberFilterBar = ({
+  iconOnly,
+  onValueChange,
+  queryKey,
+  mode = 'single',
+}: {
+  iconOnly?: boolean;
+  onValueChange?: (value: string[] | string | null) => void;
+  queryKey?: string;
+  mode?: 'single' | 'multiple';
+}) => {
+  const [assignedTo, setAssignedTo] = useQueryState<string[] | string>(
+    queryKey || 'assignedTo',
+  );
   const [open, setOpen] = useState(false);
 
   if (!assignedTo) {
@@ -204,7 +260,7 @@ export const SelectMemberFilterBar = () => {
   }
 
   return (
-    <Filter.BarItem>
+    <Filter.BarItem queryKey={queryKey || 'assignedTo'}>
       <Filter.BarName>
         <IconUser />
         Assigned To
@@ -213,11 +269,7 @@ export const SelectMemberFilterBar = () => {
         mode="multiple"
         value={assignedTo || []}
         onValueChange={(value) => {
-          if (value.length > 0) {
-            setAssignedTo(value as string[]);
-          } else {
-            setAssignedTo(null);
-          }
+          setAssignedTo(null);
           setOpen(false);
         }}
       >
@@ -231,39 +283,61 @@ export const SelectMemberFilterBar = () => {
             <SelectMember.Content />
           </Combobox.Content>
         </Popover>
-      </SelectMember.Provider>
-      <Filter.BarClose filterKey="assignedTo" />
+      </SelectMemberProvider>
     </Filter.BarItem>
   );
 };
 
-export const SelectMemberInlineCell = ({
-  onValueChange,
-  scope,
-  ...props
-}: Omit<React.ComponentProps<typeof SelectMemberProvider>, 'children'> & {
-  scope?: string;
-}) => {
-  const [open, setOpen] = useState(false);
-  return (
-    <SelectMemberProvider
-      onValueChange={(value) => {
-        onValueChange?.(value);
-        setOpen(false);
-      }}
-      {...props}
-    >
-      <RecordTablePopover open={open} onOpenChange={setOpen} scope={scope}>
-        <RecordTableCellTrigger>
-          <SelectMember.Value placeholder={''} />
-        </RecordTableCellTrigger>
-        <RecordTableCellContent>
-          <SelectMember.Content />
-        </RecordTableCellContent>
-      </RecordTablePopover>
-    </SelectMemberProvider>
-  );
-};
+export const SelectMemberInlineCell = React.forwardRef<
+  React.ComponentRef<typeof RecordTableInlineCell.Trigger>,
+  Omit<React.ComponentProps<typeof SelectMemberProvider>, 'children'> &
+    React.ComponentProps<typeof RecordTableInlineCell.Trigger> & {
+      scope?: string;
+      placeholder?: string;
+      size?: AvatarProps['size'];
+    }
+>(
+  (
+    {
+      mode,
+      value,
+      onValueChange,
+      members,
+      size = 'lg',
+      scope,
+      placeholder,
+      className,
+      ...props
+    },
+    ref,
+  ) => {
+    const [open, setOpen] = useState(false);
+    return (
+      <SelectMemberProvider
+        mode={mode}
+        value={value}
+        onValueChange={onValueChange}
+        members={members}
+        setOpen={setOpen}
+      >
+        <PopoverScoped scope={scope} open={open} onOpenChange={setOpen}>
+          <RecordTableInlineCell.Trigger
+            ref={ref}
+            {...props}
+            className={cn(className, 'text-xs')}
+          >
+            <SelectMemberValue placeholder={placeholder ?? ''} size={size} />
+          </RecordTableInlineCell.Trigger>
+          <RecordTableInlineCell.Content>
+            <SelectMemberContent />
+          </RecordTableInlineCell.Content>
+        </PopoverScoped>
+      </SelectMemberProvider>
+    );
+  },
+);
+
+SelectMemberInlineCell.displayName = 'SelectMemberInlineCell';
 
 export const SelectMemberFormItem = ({
   onValueChange,
@@ -299,9 +373,57 @@ export const SelectMemberFormItem = ({
 export const SelectMemberDetail = ({
   onValueChange,
   className,
+  size = 'xl',
+  placeholder,
+  value,
   ...props
 }: Omit<React.ComponentProps<typeof SelectMemberProvider>, 'children'> & {
   className?: string;
+  size?: 'lg' | 'sm' | 'xl' | 'default' | 'xs';
+  placeholder?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <SelectMemberProvider
+      value={value}
+      onValueChange={(value) => {
+        onValueChange?.(value);
+        setOpen(false);
+      }}
+      {...props}
+    >
+      <Popover open={open} onOpenChange={setOpen}>
+        <Popover.Trigger asChild>
+          {!value ? (
+            <Combobox.TriggerBase className="font-medium">
+              Add Owner <IconPlus />
+            </Combobox.TriggerBase>
+          ) : (
+            <Button variant="ghost" className="w-full inline-flex">
+              <SelectMemberValue size={size} />
+            </Button>
+          )}
+        </Popover.Trigger>
+        <Combobox.Content>
+          <SelectMemberContent />
+        </Combobox.Content>
+      </Popover>
+    </SelectMemberProvider>
+  );
+};
+
+export const SelectMemberRoot = ({
+  onValueChange,
+  className,
+  size,
+  placeholder,
+  scope,
+  ...props
+}: Omit<React.ComponentProps<typeof SelectMemberProvider>, 'children'> & {
+  className?: string;
+  size?: 'lg' | 'sm' | 'xl' | 'default' | 'xs';
+  placeholder?: string;
+  scope?: string;
 }) => {
   const [open, setOpen] = useState(false);
   return (
@@ -312,7 +434,7 @@ export const SelectMemberDetail = ({
       }}
       {...props}
     >
-      <Popover open={open} onOpenChange={setOpen}>
+      <PopoverScoped open={open} onOpenChange={setOpen} scope={scope}>
         <Combobox.Trigger
           className={cn('w-auto inline-flex', className)}
           variant="ghost"
@@ -322,8 +444,8 @@ export const SelectMemberDetail = ({
         <Combobox.Content>
           <SelectMember.Content />
         </Combobox.Content>
-      </Popover>
-    </SelectMember.Provider>
+      </PopoverScoped>
+    </SelectMemberProvider>
   );
 };
 
@@ -331,10 +453,12 @@ export const SelectMember = {
   Provider: SelectMemberProvider,
   Value: SelectMemberValue,
   Content: SelectMemberContent,
+  CommandItem: SelectMemberCommandItem,
+  NoAssigneeItem: SelectMemberNoAssigneeItem,
   FilterItem: SelectMemberFilterItem,
   FilterView: SelectMemberFilterView,
   FilterBar: SelectMemberFilterBar,
   InlineCell: SelectMemberInlineCell,
   FormItem: SelectMemberFormItem,
   Detail: SelectMemberDetail,
-};
+});

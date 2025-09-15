@@ -1,11 +1,10 @@
-import * as trpcExpress from '@trpc/server/adapters/express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import {
   closeMongooose,
-  createTRPCContext,
-  joinErxesGateway,
-  leaveErxesGateway,
+  createHealthRoute,
+  isDev,
+  keyForConfig,
   redis,
 } from 'erxes-api-shared/utils';
 import express from 'express';
@@ -13,9 +12,16 @@ import * as http from 'http';
 
 import { initMQWorkers } from './bullmq';
 
-const { DOMAIN, CLIENT_PORTAL_DOMAINS, ALLOWED_DOMAINS } = process.env;
+const {
+  DOMAIN,
+  CLIENT_PORTAL_DOMAINS,
+  ALLOWED_DOMAINS,
+  LOAD_BALANCER_ADDRESS,
+  MONGO_URL,
+} = process.env;
 
 const port = process.env.PORT ? Number(process.env.PORT) : 3301;
+const serviceName = 'logs-service';
 
 const app = express();
 
@@ -33,8 +39,9 @@ app.use(cookieParser());
 const corsOptions = {
   credentials: true,
   origin: [
-    DOMAIN ? DOMAIN : 'http://localhost:3001',
-    ALLOWED_DOMAINS ? ALLOWED_DOMAINS : 'http://localhost:3200',
+    ...(DOMAIN ? [DOMAIN] : []),
+    ...(isDev ? ['http://localhost:3001'] : []),
+    ALLOWED_DOMAINS || 'http://localhost:3200',
     ...(CLIENT_PORTAL_DOMAINS || '').split(','),
     ...(process.env.ALLOWED_ORIGINS || '')
       .split(',')
@@ -44,30 +51,27 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// app.use(
-//   '/trpc',
-//   trpcExpress.createExpressMiddleware({
-//     router: appRouter,
-//     createContext: createTRPCContext(async (subdomain, context) => {
-//       const models = await generateModels(subdomain);
-
-//       context.models = models;
-
-//       return context;
-//     }),
-//   }),
-// );
+app.get('/health', createHealthRoute(serviceName));
 
 // Wrap the Express server
 const httpServer = http.createServer(app);
 
 httpServer.listen(port, async () => {
-  await joinErxesGateway({
-    name: 'logs',
-    port,
-    hasSubscriptions: false,
-    meta: {},
-  });
+  await redis.set(
+    keyForConfig(serviceName),
+
+    JSON.stringify({
+      dbConnectionString: MONGO_URL,
+    }),
+  );
+
+  const address =
+    LOAD_BALANCER_ADDRESS ||
+    `http://${isDev ? 'localhost' : serviceName}:${port}`;
+
+  await redis.set(`service-logs`, address);
+
+  console.log(`service-logs joined with ${address}`);
   await initMQWorkers(redis);
 });
 
@@ -76,7 +80,7 @@ process.stdin.resume(); // so the program will not close instantly
 
 async function leaveServiceDiscovery() {
   try {
-    await leaveErxesGateway('logs', port);
+    console.log(`$service-logs left ${port}`);
     console.log('Left from service discovery');
   } catch (e) {
     console.error(e);

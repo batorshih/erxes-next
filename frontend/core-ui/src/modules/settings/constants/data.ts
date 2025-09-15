@@ -1,19 +1,18 @@
 import {
-  IconAdjustmentsAlt,
-  IconChartPie2,
-  IconChessKnight,
-  IconColorSwatch,
-  IconFile,
-  IconMail,
-  IconTag,
-  IconUserCircle,
-  IconUsersGroup,
-} from '@tabler/icons-react';
-import {
   SettingsPath,
   SettingsWorkspacePath,
   TSettingPath,
 } from '@/types/paths/SettingsPath';
+import {
+  IconChessKnight,
+  IconFile,
+  IconMail,
+  IconPassword,
+  IconTag,
+  IconUserCircle,
+  IconUserCog,
+  IconUsersGroup,
+} from '@tabler/icons-react';
 
 export const KEY_LABELS = {
   UPLOAD_FILE_TYPES: 'Upload File Types',
@@ -110,10 +109,15 @@ export const SETTINGS_PATH_DATA: { [key: string]: TSettingPath[] } = {
       path: SettingsPath.Profile,
     },
     {
-      name: 'Experience',
-      icon: IconColorSwatch,
-      path: SettingsPath.Experience,
+      name: 'Change password',
+      icon: IconPassword,
+      path: SettingsPath.ChangePassword,
     },
+    // {
+    //   name: 'Experience',
+    //   icon: IconColorSwatch,
+    //   path: SettingsPath.Experience,
+    // },
   ],
   nav: [
     {
@@ -122,10 +126,15 @@ export const SETTINGS_PATH_DATA: { [key: string]: TSettingPath[] } = {
       path: SettingsWorkspacePath.TeamMember,
     },
     {
-      name: 'General',
-      icon: IconAdjustmentsAlt,
-      path: SettingsWorkspacePath.General,
+      name: 'Permissions',
+      icon: IconUserCog,
+      path: SettingsWorkspacePath.Permissions,
     },
+    // {
+    //   name: 'General',
+    //   icon: IconAdjustmentsAlt,
+    //   path: SettingsWorkspacePath.General,
+    // },
     {
       name: 'File upload',
       icon: IconFile,
@@ -137,11 +146,11 @@ export const SETTINGS_PATH_DATA: { [key: string]: TSettingPath[] } = {
       path: SettingsWorkspacePath.MailConfig,
     },
 
-    {
-      name: 'Structure',
-      icon: IconChartPie2,
-      path: SettingsWorkspacePath.Structure,
-    },
+    // {
+    //   name: 'Structure',
+    //   icon: IconChartPie2,
+    //   path: SettingsWorkspacePath.Structure,
+    // },
     {
       name: 'Tags',
       icon: IconTag,

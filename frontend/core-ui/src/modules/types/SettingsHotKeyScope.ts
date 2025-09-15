@@ -5,4 +5,6 @@ export enum SettingsHotKeyScope {
   DepartmentsPage = 'settings-departments-page',
   UnitsPage = 'settings-units-page',
   PositionsPage = 'settings-positions-page',
+  UsersPage = 'settings-users-page',
+  PermissionsPage = 'settings-permissions-page',
 }

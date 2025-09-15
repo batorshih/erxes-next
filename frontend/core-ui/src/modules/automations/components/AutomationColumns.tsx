@@ -5,16 +5,13 @@ import {
   Badge,
   cn,
   RecordTable,
-  readFile,
-  RecordTableCellContent,
-  RecordTableCellDisplay,
-  RecordTableCellTrigger,
-  RecordTablePopover,
+  readImage,
+  RecordTableInlineCell,
   RelativeDateDisplay,
   Switch,
   Label,
+  Popover,
 } from 'erxes-ui';
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IAction, ITrigger, SelectTags } from 'ui-modules';
 import { IAutomation } from '../types';
@@ -57,8 +54,8 @@ export const automationColumns: ColumnDef<IAutomation>[] = [
       const status = cell.getValue() as 'active' | 'draft';
       const [edit] = useMutation(AUTOMATION_EDIT);
       return (
-        <RecordTablePopover>
-          <RecordTableCellTrigger>
+        <Popover>
+          <RecordTableInlineCell.Trigger>
             <div className="w-full flex justify-center">
               <Badge
                 variant={status === 'active' ? 'success' : 'secondary'}
@@ -69,9 +66,9 @@ export const automationColumns: ColumnDef<IAutomation>[] = [
                 {status}
               </Badge>
             </div>
-          </RecordTableCellTrigger>
-          <RecordTableCellContent className="w-24 h-12 flex justify-center items-center space-x-2">
-            <Label htmlFor="mode">InActive</Label>
+          </RecordTableInlineCell.Trigger>
+          <RecordTableInlineCell.Content className="w-24 h-12 flex justify-center items-center space-x-2">
+            <Label htmlFor="mode">Inactive</Label>
             <Switch
               id="mode"
               onCheckedChange={(open) =>
@@ -84,8 +81,8 @@ export const automationColumns: ColumnDef<IAutomation>[] = [
               }
               checked={status === 'active'}
             />
-          </RecordTableCellContent>
-        </RecordTablePopover>
+          </RecordTableInlineCell.Content>
+        </Popover>
       );
     },
     size: 80,
@@ -97,10 +94,10 @@ export const automationColumns: ColumnDef<IAutomation>[] = [
     cell: ({ cell }) => {
       const triggers = (cell.getValue() || []) as ITrigger[];
       return (
-        <RecordTableCellDisplay>
+        <RecordTableInlineCell>
           <IconPointerBolt size={12} />
           {triggers?.length}
-        </RecordTableCellDisplay>
+        </RecordTableInlineCell>
       );
     },
     size: 80,
@@ -112,10 +109,10 @@ export const automationColumns: ColumnDef<IAutomation>[] = [
     cell: ({ cell }) => {
       const actions = (cell.getValue() || []) as IAction[];
       return (
-        <RecordTableCellDisplay>
+        <RecordTableInlineCell>
           <IconShare size={12} />
           {actions?.length}
-        </RecordTableCellDisplay>
+        </RecordTableInlineCell>
       );
     },
     size: 80,
@@ -128,10 +125,10 @@ export const automationColumns: ColumnDef<IAutomation>[] = [
       const user = (cell.getValue() || {}) as IUser;
       const { details } = user;
       return (
-        <RecordTableCellDisplay>
+        <RecordTableInlineCell>
           <Avatar className="h-6 w-6 rounded-full">
             <Avatar.Image
-              src={readFile(details?.avatar)}
+              src={readImage(details?.avatar)}
               alt={details?.fullName || ''}
             />
             <Avatar.Fallback className="rounded-lg text-black">
@@ -139,7 +136,7 @@ export const automationColumns: ColumnDef<IAutomation>[] = [
             </Avatar.Fallback>
           </Avatar>
           {generateUserName(user)}
-        </RecordTableCellDisplay>
+        </RecordTableInlineCell>
       );
     },
   },
@@ -151,10 +148,10 @@ export const automationColumns: ColumnDef<IAutomation>[] = [
       const user = (cell.getValue() || {}) as IUser;
       const { details } = user;
       return (
-        <RecordTableCellDisplay>
+        <RecordTableInlineCell>
           <Avatar className="h-6 w-6 rounded-full">
             <Avatar.Image
-              src={readFile(details?.avatar)}
+              src={readImage(details?.avatar)}
               alt={details?.fullName || ''}
             />
             <Avatar.Fallback className="rounded-lg text-black">
@@ -162,7 +159,7 @@ export const automationColumns: ColumnDef<IAutomation>[] = [
             </Avatar.Fallback>
           </Avatar>
           {generateUserName(user)}
-        </RecordTableCellDisplay>
+        </RecordTableInlineCell>
       );
     },
   },
@@ -173,9 +170,9 @@ export const automationColumns: ColumnDef<IAutomation>[] = [
     cell: ({ cell }) => {
       return (
         <RelativeDateDisplay value={cell.getValue() as string} asChild>
-          <RecordTableCellDisplay>
+          <RecordTableInlineCell>
             <RelativeDateDisplay.Value value={cell.getValue() as string} />
-          </RecordTableCellDisplay>
+          </RecordTableInlineCell>
         </RelativeDateDisplay>
       );
     },
@@ -187,9 +184,9 @@ export const automationColumns: ColumnDef<IAutomation>[] = [
     cell: ({ cell }) => {
       return (
         <RelativeDateDisplay value={cell.getValue() as string} asChild>
-          <RecordTableCellDisplay>
+          <RecordTableInlineCell>
             <RelativeDateDisplay.Value value={cell.getValue() as string} />
-          </RecordTableCellDisplay>
+          </RecordTableInlineCell>
         </RelativeDateDisplay>
       );
     },
@@ -199,33 +196,26 @@ export const automationColumns: ColumnDef<IAutomation>[] = [
     accessorKey: 'tagIds',
     header: () => <RecordTable.InlineHead label="Tags" />,
     cell: ({ cell }) => {
-      const [selectedTags, setSelectedTags] = useState<string[]>(
-        cell.row.original.tagIds || [],
-      );
-      const [open, setOpen] = useState(false);
-
       return (
-        <SelectTags
+        <SelectTags.InlineCell
           tagType="core:automation"
           mode="multiple"
-          value={selectedTags}
+          value={cell.row.original.tagIds}
           targetIds={[cell.row.original._id]}
-          onValueChange={(tags) => {
-            if (Array.isArray(tags)) {
-              setSelectedTags(tags);
-              setOpen(false);
-            }
-          }}
-        >
-          <RecordTablePopover open={open} onOpenChange={setOpen}>
-            <RecordTableCellTrigger>
-              <SelectTags.List />
-            </RecordTableCellTrigger>
-            <RecordTableCellContent className="w-96">
-              <SelectTags.Content />
-            </RecordTableCellContent>
-          </RecordTablePopover>
-        </SelectTags>
+          options={(newSelectedTagIds) => ({
+            update: (cache) => {
+              cache.modify({
+                id: cache.identify({
+                  __typename: 'Automation',
+                  _id: cell.row.original._id,
+                }),
+                fields: {
+                  tagIds: () => newSelectedTagIds,
+                },
+              });
+            },
+          })}
+        />
       );
     },
   },

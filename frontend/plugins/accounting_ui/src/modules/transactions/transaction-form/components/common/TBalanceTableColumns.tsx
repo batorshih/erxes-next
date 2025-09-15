@@ -9,6 +9,8 @@ import {
   InlineCellEdit,
   Input,
   RecordTable,
+  RecordTableInlineCell,
+  PopoverScoped,
 } from 'erxes-ui';
 import { useSetAtom } from 'jotai';
 import { useState } from 'react';
@@ -22,22 +24,18 @@ const NumberCell = ({ getValue, row }: any) => {
   const { _id } = row.original;
 
   return (
-    <InlineCell
-      name="number"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>{getValue() as string}</InlineCellDisplay>
-      )}
-      edit={() => (
-        <InlineCellEdit>
-          <Input
-            value={number}
-            onChange={(e) => setNumber(e.target.value)}
-            className="w-full"
-          />
-        </InlineCellEdit>
-      )}
-    />
+    <PopoverScoped scope={`tbalance-${_id}-number`}>
+      <RecordTableInlineCell.Trigger>
+        {getValue() as string}
+      </RecordTableInlineCell.Trigger>
+      <RecordTableInlineCell.Content>
+        <Input
+          value={number}
+          onChange={(e) => setNumber(e.target.value)}
+          className="w-full"
+        />
+      </RecordTableInlineCell.Content>
+    </PopoverScoped>
   );
 };
 
@@ -46,21 +44,18 @@ const DescriptionCell = ({ getValue, row }: any) => {
   const { _id } = row.original;
 
   return (
-    <InlineCell
-      name="description"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>{getValue() as string}</InlineCellDisplay>
-      )}
-      edit={() => (
-        <InlineCellEdit className="w-80">
-          <Input
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </InlineCellEdit>
-      )}
-    />
+    <PopoverScoped scope={`tbalance-${_id}-description`}>
+      <RecordTableInlineCell.Trigger>
+        {getValue() as string}
+      </RecordTableInlineCell.Trigger>
+      <RecordTableInlineCell.Content className="w-80">
+        <Input
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full"
+        />
+      </RecordTableInlineCell.Content>
+    </PopoverScoped>
   );
 };
 
@@ -69,20 +64,14 @@ const DebitCell = ({ getValue, row }: any) => {
   const { amount, side } = detail;
 
   return (
-    <InlineCell
-      name="debit"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>
-          <CurrencyFormatedDisplay
-            currencyValue={{
-              currencyCode: CurrencyCode.MNT,
-              amountMicros: side === TR_SIDES.DEBIT ? amount * 1000000 : 0,
-            }}
-          />
-        </InlineCellDisplay>
-      )}
-    />
+    <RecordTableInlineCell>
+      <CurrencyFormatedDisplay
+        currencyValue={{
+          currencyCode: CurrencyCode.MNT,
+          amountMicros: side === TR_SIDES.DEBIT ? amount : 0,
+        }}
+      />
+    </RecordTableInlineCell>
   );
 };
 
@@ -91,20 +80,14 @@ const CreditCell = ({ getValue, row }: any) => {
   const { amount, side } = detail;
 
   return (
-    <InlineCell
-      name="credit"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>
-          <CurrencyFormatedDisplay
-            currencyValue={{
-              currencyCode: CurrencyCode.MNT,
-              amountMicros: side === TR_SIDES.CREDIT ? amount * 1000000 : 0,
-            }}
-          />
-        </InlineCellDisplay>
-      )}
-    />
+    <RecordTableInlineCell>
+      <CurrencyFormatedDisplay
+        currencyValue={{
+          currencyCode: CurrencyCode.MNT,
+          amountMicros: side === TR_SIDES.CREDIT ? amount : 0,
+        }}
+      />
+    </RecordTableInlineCell>
   );
 };
 
@@ -112,15 +95,9 @@ const BranchCell = ({ row }: any) => {
   const { _id, branch } = row.original;
 
   return (
-    <InlineCell
-      name="branch"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>
-          {`${branch?.code ? `${branch.code} - ` : ''}${branch?.title ?? ''}`}
-        </InlineCellDisplay>
-      )}
-    />
+    <RecordTableInlineCell>
+      {`${branch?.code ? `${branch.code} - ` : ''}${branch?.title ?? ''}`}
+    </RecordTableInlineCell>
   );
 };
 
@@ -128,30 +105,20 @@ const DepartmentCell = ({ row }: any) => {
   const { _id, department } = row.original;
 
   return (
-    <InlineCell
-      name="department"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>
-          {`${department?.code ? `${department.code} - ` : ''}${department?.title ?? ''}`}
-        </InlineCellDisplay>
-      )}
-    />
+    <RecordTableInlineCell>
+      {`${department?.code ? `${department.code} - ` : ''}${
+        department?.title ?? ''
+      }`}
+    </RecordTableInlineCell>
   );
 };
 
 const DateCell = ({ getValue, row }: any) => {
   const { _id } = row.original;
   return (
-    <InlineCell
-      name="date"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>
-          {dayjs(new Date(getValue())).format("YYYY-MM-DD")}
-        </InlineCellDisplay>
-      )}
-    />
+    <RecordTableInlineCell>
+      {dayjs(new Date(getValue())).format('YYYY-MM-DD')}
+    </RecordTableInlineCell>
   );
 };
 
@@ -159,16 +126,10 @@ const AccountCell = ({ row }: any) => {
   const { details, _id } = row.original;
 
   return (
-    <InlineCell
-      name="account"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>
-          {details.length &&
-            `${details[0].account?.code} - ${details[0].account?.name}`}
-        </InlineCellDisplay>
-      )}
-    />
+    <RecordTableInlineCell>
+      {details.length &&
+        `${details[0].account?.code} - ${details[0].account?.name}`}
+    </RecordTableInlineCell>
   );
 };
 
@@ -184,7 +145,7 @@ const TransactionMoreColumnCell = ({
     <RecordTable.MoreButton
       className="w-full h-full"
       onClick={() => {
-        setActiveJournal(journalIndex)
+        setActiveJournal(journalIndex);
       }}
     />
   );
@@ -231,17 +192,13 @@ export const tbalanceColumns: ColumnDef<ITBalanceTransaction>[] = [
   },
   {
     id: 'debit',
-    header: () => (
-      <RecordTable.InlineHead icon={IconMoneybag} label="Debit" />
-    ),
+    header: () => <RecordTable.InlineHead icon={IconMoneybag} label="Debit" />,
     accessorKey: 'debit',
     cell: ({ getValue, row }) => <DebitCell getValue={getValue} row={row} />,
   },
   {
     id: 'credit',
-    header: () => (
-      <RecordTable.InlineHead icon={IconMoneybag} label="Credit" />
-    ),
+    header: () => <RecordTable.InlineHead icon={IconMoneybag} label="Credit" />,
     accessorKey: 'credit',
     cell: ({ getValue, row }) => <CreditCell getValue={getValue} row={row} />,
   },
@@ -255,6 +212,8 @@ export const tbalanceColumns: ColumnDef<ITBalanceTransaction>[] = [
     id: 'department',
     header: () => <RecordTable.InlineHead icon={IconFile} label="Department" />,
     accessorKey: 'department',
-    cell: ({ getValue, row }) => <DepartmentCell getValue={getValue} row={row} />,
+    cell: ({ getValue, row }) => (
+      <DepartmentCell getValue={getValue} row={row} />
+    ),
   },
 ];

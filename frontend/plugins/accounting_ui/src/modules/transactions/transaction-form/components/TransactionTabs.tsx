@@ -1,11 +1,11 @@
 import { IconPlus, IconX } from '@tabler/icons-react';
 import { Button, cn, Tabs } from 'erxes-ui';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import { useFieldArray } from 'react-hook-form';
 import { AddTransaction } from '../../components/AddTransaction';
-import { TR_JOURNAL_LABELS, TR_SIDES, TrJournalEnum } from '../../types/constants';
+import { TR_JOURNAL_LABELS, TR_PERFECT_JOURNALS, TR_SIDES, TrJournalEnum } from '../../types/constants';
 import { JOURNALS_BY_JOURNAL } from '../contants/defaultValues';
-import { activeJournalState, followTrDocsState } from '../states/trStates';
+import { activeJournalState, followTrDocsState, isPerfectState } from '../states/trStates';
 import {
   ITransactionGroupForm,
   TTrDoc,
@@ -14,10 +14,15 @@ import { TBalance } from './common/TBalance';
 import { BankTransaction } from './forms/BankForm';
 import { CashTransaction } from './forms/CashForm';
 import { InvIncomeForm } from './forms/InvIncomeForm';
+import { InvMoveForm } from './forms/InvMoveForm';
+import { InvOutForm } from './forms/InvOutForm';
+import { InvSaleForm } from './forms/InvSaleForm';
 import { MainJournalForm } from './forms/MainJournalForm';
 import { PayableTransaction } from './forms/PayableForm';
 import { ReceivableTransaction } from './forms/ReceivableForm';
-import { sumDtAndCt } from './common/Summary';
+import { sumDtAndCt } from './Summary';
+import { TBalance } from './TBalance';
+import { useEffect } from 'react';
 
 // Separate the transaction form component to prevent unnecessary re-renders
 const TransactionForm = ({
@@ -41,6 +46,12 @@ const TransactionForm = ({
     return <PayableTransaction form={form} index={index} />;
   if (field.journal === TrJournalEnum.INV_INCOME)
     return <InvIncomeForm form={form} index={index} />;
+  if (field.journal === TrJournalEnum.INV_OUT)
+    return <InvOutForm form={form} index={index} />;
+  if (field.journal === TrJournalEnum.INV_MOVE)
+    return <InvMoveForm form={form} index={index} />;
+  if (field.journal === TrJournalEnum.INV_SALE)
+    return <InvSaleForm form={form} index={index} />;
   return null;
 };
 
@@ -50,6 +61,7 @@ export const TransactionsTabsList = ({
   form: ITransactionGroupForm;
 }) => {
   const [activeJournal, setActiveJournal] = useAtom(activeJournalState);
+  const [isPerfect, setIsPerfect] = useAtom(isPerfectState);
 
   // Use useFieldArray with keyName for better performance
   const { fields, append, remove } = useFieldArray({
@@ -60,7 +72,22 @@ export const TransactionsTabsList = ({
       minLength: 1,
     },
   });
-  const [followTrDocs] = useAtom(followTrDocsState);
+
+  const journals = fields.map(f => f.journal);
+
+  useEffect(() => {
+    const foundPJournals = journals.filter(j => TR_PERFECT_JOURNALS.includes(j));
+
+    if (foundPJournals.length) {
+      setIsPerfect(true)
+    } else {
+      setIsPerfect(false)
+    }
+
+
+  }, [journals]);
+
+  const followTrDocs = useAtomValue(followTrDocsState);
 
   const handleRemove = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -136,12 +163,15 @@ export const TransactionsTabsList = ({
               {'T Balance'}
             </div>
           </Tabs.Trigger>
-          <AddTransaction inForm onClick={handleAddTransaction}>
-          <Button variant="ghost">
-            <IconPlus />
-            New Transaction
-          </Button>
-        </AddTransaction>
+
+          {!isPerfect && (
+            <AddTransaction inForm onClick={handleAddTransaction}>
+              <Button variant="ghost">
+                <IconPlus />
+                New Transaction
+              </Button>
+            </AddTransaction>
+          )}
         </Tabs.List>
         
         <Button variant="secondary">Save transaction template</Button>

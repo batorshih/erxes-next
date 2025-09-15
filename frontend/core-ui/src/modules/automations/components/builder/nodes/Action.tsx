@@ -1,4 +1,7 @@
-import { Handle, NodeProps, Position } from '@xyflow/react';
+import { NodeOutputHandler } from '@/automations/components/builder/nodes/NodeOutputHandler';
+import { IconAdjustmentsAlt } from '@tabler/icons-react';
+import { Handle, Node, NodeProps, Position } from '@xyflow/react';
+import { cn, IconComponent } from 'erxes-ui';
 import { memo } from 'react';
 // import {
 //     type NodeProps,
@@ -32,7 +35,7 @@ const renderContent = (data: NodeData) => {
   return (
     <div className="p-3">
       <div className="flex items-center gap-2 text-success/90 pb-2">
-        <IconAdjustmentsAlt className="w-4 h-4" />
+        <IconAdjustmentsAlt className="size-4" />
         <p className="text-sm font-semibold">Configuration</p>
       </div>
       <div className="rounded border bg-muted overflow-x-auto">
@@ -55,9 +58,11 @@ const renderSourceHandler = (type: string) => {
           className={`!w-4 !h-4 -z-10 !bg-success`}
           style={{ top: '50%' }}
         >
-          <div className="ml-4 text-xs text-muted-foreground ">True</div>
-        </Handle>
-        <Handle
+          <div className="ml-4 text-xs text-muted-foreground fixed -top-2">
+            True
+          </div>
+        </NodeOutputHandler>
+        <NodeOutputHandler
           key="no-right"
           id="no-right"
           type="source"
@@ -83,8 +88,8 @@ const renderSourceHandler = (type: string) => {
   );
 };
 
-const ActionNode = ({ data, selected, id }: NodeProps<any>) => {
-  const { setValue } = useFormContext<TAutomationProps>();
+const ActionNode = ({ data, selected, id }: NodeProps<Node<NodeData>>) => {
+  const { beforeTitleContent, config, nextActionId } = data;
 
   return (
     <div className="flex flex-col" key={id}>
@@ -102,9 +107,9 @@ const ActionNode = ({ data, selected, id }: NodeProps<any>) => {
         <div className="p-3 flex items-center justify-between border-b border-muted">
           <div className="flex items-center gap-2 text-success/90">
             <div
-              className={`h-6 w-6 rounded-full bg-success/10  flex items-center justify-center`}
+              className={`size-6 rounded-full bg-success/10  flex items-center justify-center`}
             >
-              <IconMessage className="w-4 h-4" />
+              <IconComponent className="size-4" name={data.icon} />
             </div>
             <span className="font-medium">{data.label}</span>
           </div>

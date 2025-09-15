@@ -1,5 +1,4 @@
-'use client';
-import { Button, Input, Label, Select, Switch } from 'erxes-ui';
+import { Button, Form, Input, Select, Switch } from 'erxes-ui';
 import { useSearchParams } from 'react-router-dom';
 import { useAtom } from 'jotai';
 import { screenConfigSettingsAtom } from '../../states/posCategory';
@@ -116,45 +115,204 @@ export default function ScreenConfigForm({
         </h2>
       </div>
 
-      <div className="space-y-8">
-        <div className="space-y-6">
-          <h2 className="text-[#4F46E5] text-base font-semibold">MAIN</h2>
-
-          <div className="space-y-2">
-            <div className="flex flex-col gap-3">
-              <span className="text-gray-600 text-sm">KITCHEN SCREEN</span>
-              <Switch
-                className="scale-150 w-7"
-                checked={screenConfig.kitchenScreenEnabled}
-                onCheckedChange={(checked) =>
-                  handleSwitchChange('kitchenScreenEnabled', checked)
-                }
-                disabled={isReadOnly}
+            <div className="space-y-2">
+              <Form.Field
+                control={form.control}
+                name="kitchenScreenEnabled"
+                render={({ field }) => (
+                  <Form.Item>
+                    <div className="flex flex-col gap-3">
+                      <Form.Label className="text-gray-600 text-sm">
+                        KITCHEN SCREEN
+                      </Form.Label>
+                      <Form.Control>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isReadOnly}
+                        />
+                      </Form.Control>
+                    </div>
+                    <Form.Message />
+                  </Form.Item>
+                )}
               />
+
+              {watchKitchenScreenEnabled && (
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <Form.Field
+                    control={form.control}
+                    name="showTypes"
+                    render={({ field }) => (
+                      <Form.Item>
+                        <Form.Label className="text-sm text-gray-500">
+                          SHOW TYPES
+                        </Form.Label>
+                        <Form.Control>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            disabled={isReadOnly}
+                          >
+                            <Select.Trigger>
+                              <Select.Value placeholder="Select show type" />
+                            </Select.Trigger>
+                            <Select.Content>
+                              {SHOW_TYPE_OPTIONS.map((option) => (
+                                <Select.Item
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </Select.Item>
+                              ))}
+                            </Select.Content>
+                          </Select>
+                        </Form.Control>
+                        <Form.Message />
+                      </Form.Item>
+                    )}
+                  />
+
+                  <Form.Field
+                    control={form.control}
+                    name="statusChange"
+                    render={({ field }) => (
+                      <Form.Item>
+                        <Form.Label className="text-sm text-gray-500">
+                          STATUS CHANGE/LEAVE/
+                        </Form.Label>
+                        <Form.Control>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            disabled={isReadOnly}
+                          >
+                            <Select.Trigger>
+                              <Select.Value placeholder="Select status change type" />
+                            </Select.Trigger>
+                            <Select.Content>
+                              {KITCHEN_TYPE_OPTIONS.map((option) => (
+                                <Select.Item
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </Select.Item>
+                              ))}
+                            </Select.Content>
+                          </Select>
+                        </Form.Control>
+                        <Form.Message />
+                      </Form.Item>
+                    )}
+                  />
+                </div>
+              )}
             </div>
 
-            {screenConfig.kitchenScreenEnabled && (
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-500">SHOW TYPES</Label>
-                  <Select
-                    value={screenConfig.showTypes}
-                    onValueChange={(value) =>
-                      handleSelectChange('showTypes', value)
-                    }
-                    disabled={isReadOnly}
-                  >
-                    <Select.Trigger>
-                      <Select.Value placeholder="Select show type" />
-                    </Select.Trigger>
-                    <Select.Content>
-                      {SHOW_TYPE_OPTIONS.map((option) => (
-                        <Select.Item key={option.value} value={option.value}>
-                          {option.label}
-                        </Select.Item>
-                      ))}
-                    </Select.Content>
-                  </Select>
+            <div className="space-y-2">
+              <Form.Field
+                control={form.control}
+                name="watchingScreenEnabled"
+                render={({ field }) => (
+                  <Form.Item>
+                    <div className="flex flex-col gap-3">
+                      <Form.Label className="text-gray-600">
+                        WATCHING SCREEN
+                      </Form.Label>
+                      <Form.Control>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isReadOnly}
+                        />
+                      </Form.Control>
+                    </div>
+                    <Form.Message />
+                  </Form.Item>
+                )}
+              />
+
+              {watchWatchingScreenEnabled && (
+                <div className="grid grid-cols-2 gap-4 mt-4 animate-in slide-in-from-top-2 duration-200">
+                  <Form.Field
+                    control={form.control}
+                    name="changeType"
+                    render={({ field }) => (
+                      <Form.Item>
+                        <Form.Label className="text-sm text-gray-500">
+                          CHANGE TYPE
+                        </Form.Label>
+                        <Form.Control>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            disabled={isReadOnly}
+                          >
+                            <Select.Trigger>
+                              <Select.Value placeholder="Select change type" />
+                            </Select.Trigger>
+                            <Select.Content>
+                              {WAITING_TYPE_OPTIONS.map((option) => (
+                                <Select.Item
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </Select.Item>
+                              ))}
+                            </Select.Content>
+                          </Select>
+                        </Form.Control>
+                        <Form.Message />
+                      </Form.Item>
+                    )}
+                  />
+
+                  <Form.Field
+                    control={form.control}
+                    name="changeCount"
+                    render={({ field }) => (
+                      <Form.Item>
+                        <Form.Label className="text-sm text-gray-500">
+                          CHANGE COUNT
+                        </Form.Label>
+                        <Form.Control>
+                          <Input
+                            type="number"
+                            {...field}
+                            placeholder="Enter count"
+                            disabled={isReadOnly}
+                            readOnly={isReadOnly}
+                          />
+                        </Form.Control>
+                        <Form.Message />
+                      </Form.Item>
+                    )}
+                  />
+
+                  <Form.Field
+                    control={form.control}
+                    name="contentUrl"
+                    render={({ field }) => (
+                      <Form.Item>
+                        <Form.Label className="text-sm text-gray-500">
+                          CONTENT URL
+                        </Form.Label>
+                        <Form.Control>
+                          <Input
+                            type="url"
+                            {...field}
+                            placeholder="Enter URL"
+                            disabled={isReadOnly}
+                            readOnly={isReadOnly}
+                          />
+                        </Form.Control>
+                        <Form.Message />
+                      </Form.Item>
+                    )}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -197,71 +355,25 @@ export default function ScreenConfigForm({
               />
             </div>
 
-            {screenConfig.watchingScreenEnabled && (
-              <div className="grid grid-cols-2 gap-4 mt-4 animate-in slide-in-from-top-2 duration-200">
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-500">CHANGE TYPE</Label>
-                  <Select
-                    value={screenConfig.changeType}
-                    onValueChange={(value) =>
-                      handleSelectChange('changeType', value)
-                    }
-                    disabled={isReadOnly}
-                  >
-                    <Select.Trigger>
-                      <Select.Value placeholder="Select change type" />
-                    </Select.Trigger>
-                    <Select.Content>
-                      {WAITING_TYPE_OPTIONS.map((option) => (
-                        <Select.Item key={option.value} value={option.value}>
-                          {option.label}
-                        </Select.Item>
-                      ))}
-                    </Select.Content>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-500">CHANGE COUNT</Label>
-                  <Input
-                    type="number"
-                    value={screenConfig.changeCount}
-                    onChange={(e) =>
-                      handleInputChange('changeCount', e.target.value)
-                    }
-                    placeholder="Enter count"
-                    disabled={isReadOnly}
-                    readOnly={isReadOnly}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-500">CONTENT URL</Label>
-                  <Input
-                    type="url"
-                    value={screenConfig.contentUrl}
-                    onChange={(e) =>
-                      handleInputChange('contentUrl', e.target.value)
-                    }
-                    placeholder="Enter URL"
-                    disabled={isReadOnly}
-                    readOnly={isReadOnly}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex flex-col gap-3">
-              <span className="text-gray-600">PRINT</span>
-              <Switch
-                className="scale-150 w-7"
-                checked={screenConfig.printEnabled}
-                onCheckedChange={(checked) =>
-                  handleSwitchChange('printEnabled', checked)
-                }
-                disabled={isReadOnly}
+            <div className="space-y-2">
+              <Form.Field
+                control={form.control}
+                name="printEnabled"
+                render={({ field }) => (
+                  <Form.Item>
+                    <div className="flex flex-col gap-3">
+                      <Form.Label className="text-gray-600">PRINT</Form.Label>
+                      <Form.Control>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isReadOnly}
+                        />
+                      </Form.Control>
+                    </div>
+                    <Form.Message />
+                  </Form.Item>
+                )}
               />
             </div>
           </div>

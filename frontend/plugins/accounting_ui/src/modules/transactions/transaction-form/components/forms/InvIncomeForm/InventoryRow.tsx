@@ -5,12 +5,11 @@ import {
   CurrencyField,
   Form,
   InputNumber,
-  RecordTableCellContent,
-  RecordTableCellDisplay,
-  RecordTableCellTrigger,
+  RecordTableInlineCell,
   RecordTableHotKeyControl,
-  RecordTablePopover,
+  Popover,
   Table,
+  PopoverScoped,
 } from 'erxes-ui';
 import { useWatch } from 'react-hook-form';
 import { SelectProduct } from 'ui-modules';
@@ -80,12 +79,7 @@ export const InventoryRow = ({
     return `trDocs.${journalIndex}.details.${detailIndex}.${name}`;
   };
 
-  const handleAmountChange = (
-    value: number,
-    onChange: (value: number) => void,
-  ) => {
-    onChange(value);
-
+  const handleAmountChange = (value: number) => {
     const newUnitPrice = count ? value / count : 0;
     form.setValue(getFieldName('unitPrice') as any, newUnitPrice);
     if (trDoc.hasVat || trDoc.hasCtax) {
@@ -174,16 +168,33 @@ export const InventoryRow = ({
         detailIndex === 0 && '[&>td]:border-t',
       )}
     >
-      {/* <Table.Cell
-        className={cn('overflow-hidden', {
-          'rounded-tl-lg border-t': detailIndex === 0,
-          'rounded-bl-lg': detailIndex === details.length - 1,
-        })}
-      >
-        <div className="w-9 flex items-center justify-center">
-          <InventoryRowCheckbox productId={product.id} />
-        </div>
-      </Table.Cell> */}
+      <RecordTableHotKeyControl rowId={_id} rowIndex={detailIndex}>
+        <Table.Cell
+          className={cn({
+            'border-t': detailIndex === 0,
+            'rounded-tl-lg': detailIndex === 0,
+            'rounded-bl-lg': detailIndex === trDoc.details.length - 1,
+          })}
+        >
+          <RecordTableInlineCell className="justify-center">
+            <Form.Field
+              control={form.control}
+              name={`trDocs.${journalIndex}.details.${detailIndex}.checked`}
+              render={({ field }) => (
+                <Form.Item>
+                  <Form.Control>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </Form.Control>
+                  <Form.Message />
+                </Form.Item>
+              )}
+            />
+          </RecordTableInlineCell>
+        </Table.Cell>
+      </RecordTableHotKeyControl>
 
       <RecordTableHotKeyControl rowId={_id} rowIndex={detailIndex}>
         <Table.Cell>
@@ -229,24 +240,24 @@ export const InventoryRow = ({
             control={form.control}
             name={`trDocs.${journalIndex}.details.${detailIndex}.count`}
             render={({ field }) => (
-              <RecordTablePopover
+              <PopoverScoped
                 scope={`trDocs.${journalIndex}.details.${detailIndex}.count`}
                 closeOnEnter
               >
                 <Form.Control>
-                  <RecordTableCellTrigger>
+                  <RecordTableInlineCell.Trigger>
                     {field.value?.toLocaleString() || 0}
-                  </RecordTableCellTrigger>
+                  </RecordTableInlineCell.Trigger>
                 </Form.Control>
-                <RecordTableCellContent>
+                <RecordTableInlineCell.Content>
                   <InputNumber
                     value={field.value ?? 0}
                     onChange={(value) =>
                       handleCountChange(value || 0, field.onChange)
                     }
                   />
-                </RecordTableCellContent>
-              </RecordTablePopover>
+                </RecordTableInlineCell.Content>
+              </PopoverScoped>
             )}
           />
         </Table.Cell>
@@ -257,52 +268,44 @@ export const InventoryRow = ({
             control={form.control}
             name={`trDocs.${journalIndex}.details.${detailIndex}.unitPrice`}
             render={({ field }) => (
-              <RecordTablePopover
+              <PopoverScoped
                 scope={`trDocs.${journalIndex}.details.${detailIndex}.unitPrice`}
                 closeOnEnter
               >
                 <Form.Control>
-                  <RecordTableCellTrigger>
+                  <RecordTableInlineCell.Trigger>
                     {field.value?.toLocaleString() || 0}
-                  </RecordTableCellTrigger>
+                  </RecordTableInlineCell.Trigger>
                 </Form.Control>
-                <RecordTableCellContent>
+                <RecordTableInlineCell.Content>
                   <CurrencyField.ValueInput
                     value={field.value || 0}
                     onChange={(value) =>
                       handleUnitPriceChange(value || 0, field.onChange)
                     }
                   />
-                </RecordTableCellContent>
-              </RecordTablePopover>
+                </RecordTableInlineCell.Content>
+              </PopoverScoped>
             )}
           />
         </Table.Cell>
       </RecordTableHotKeyControl>
       <RecordTableHotKeyControl rowId={_id} rowIndex={detailIndex}>
         <Table.Cell>
-          <Form.Field
-            control={form.control}
-            name={`trDocs.${journalIndex}.details.${detailIndex}.amount`}
-            render={({ field }) => (
-              <RecordTablePopover
-                scope={`trDocs.${journalIndex}.details.${detailIndex}.amount`}
-                closeOnEnter
-              >
-                <RecordTableCellTrigger>
-                  {field.value?.toLocaleString() || 0}
-                </RecordTableCellTrigger>
-                <RecordTableCellContent>
-                  <CurrencyField.ValueInput
-                    value={field.value ?? 0}
-                    onChange={(value) =>
-                      handleAmountChange(value || 0, field.onChange)
-                    }
-                  />
-                </RecordTableCellContent>
-              </RecordTablePopover>
-            )}
-          />
+          <PopoverScoped
+            scope={`trDocs.${journalIndex}.details.${detailIndex}.tempAmount`}
+            closeOnEnter
+          >
+            <RecordTableInlineCell.Trigger>
+              {((unitPrice ?? 0) * (count ?? 0)).toLocaleString() || 0}
+            </RecordTableInlineCell.Trigger>
+            <RecordTableInlineCell.Content>
+              <CurrencyField.ValueInput
+                value={(unitPrice ?? 0) * (count ?? 0) || 0}
+                onChange={(value) => handleAmountChange(value || 0)}
+              />
+            </RecordTableInlineCell.Content>
+          </PopoverScoped>
         </Table.Cell>
       </RecordTableHotKeyControl>
 
@@ -313,7 +316,7 @@ export const InventoryRow = ({
               'border-t': detailIndex === 0,
             })}
           >
-            <RecordTableCellDisplay className="justify-center">
+            <RecordTableInlineCell className="justify-center">
               <Form.Field
                 control={form.control}
                 name={`trDocs.${journalIndex}.details.${detailIndex}.excludeVat`}
@@ -335,7 +338,7 @@ export const InventoryRow = ({
                   </Form.Item>
                 )}
               />
-            </RecordTableCellDisplay>
+            </RecordTableInlineCell>
           </Table.Cell>
         </RecordTableHotKeyControl>
       )}
@@ -347,7 +350,7 @@ export const InventoryRow = ({
               'border-t': detailIndex === 0,
             })}
           >
-            <RecordTableCellDisplay className="justify-center">
+            <RecordTableInlineCell className="justify-center">
               <Form.Field
                 control={form.control}
                 name={`trDocs.${journalIndex}.details.${detailIndex}.excludeCtax`}
@@ -369,7 +372,7 @@ export const InventoryRow = ({
                   </Form.Item>
                 )}
               />
-            </RecordTableCellDisplay>
+            </RecordTableInlineCell>
           </Table.Cell>
         </RecordTableHotKeyControl>
       )}
@@ -378,24 +381,24 @@ export const InventoryRow = ({
         <>
           <RecordTableHotKeyControl rowId={_id} rowIndex={detailIndex}>
             <Table.Cell>
-              <RecordTablePopover
-                scope={`temp_trDocs.${journalIndex}.details.${detailIndex}.untiPriceWithTax`}
+              <PopoverScoped
+                scope={`trDocs.${journalIndex}.details.${detailIndex}.untiPriceWithTax`}
                 closeOnEnter
               >
                 <Form.Control>
-                  <RecordTableCellTrigger>
+                  <RecordTableInlineCell.Trigger>
                     {taxAmounts.unitPriceWithTax?.toLocaleString() || 0}
-                  </RecordTableCellTrigger>
+                  </RecordTableInlineCell.Trigger>
                 </Form.Control>
-                <RecordTableCellContent>
+                <RecordTableInlineCell.Content>
                   <CurrencyField.ValueInput
                     value={taxAmounts.unitPriceWithTax ?? 0}
                     onChange={(value) =>
                       handleTaxValueChange('unitPrice', value)
                     }
                   />
-                </RecordTableCellContent>
-              </RecordTablePopover>
+                </RecordTableInlineCell.Content>
+              </PopoverScoped>
             </Table.Cell>
           </RecordTableHotKeyControl>
 
@@ -406,20 +409,20 @@ export const InventoryRow = ({
                 'rounded-br-lg': detailIndex === details.length - 1,
               })}
             >
-              <RecordTablePopover
-                scope={`temp_trDocs.${journalIndex}.details.${detailIndex}.amountWithTax`}
+              <PopoverScoped
+                scope={`trDocs.${journalIndex}.details.${detailIndex}.amountWithTax`}
                 closeOnEnter
               >
-                <RecordTableCellTrigger>
+                <RecordTableInlineCell.Trigger>
                   {taxAmounts.amountWithTax?.toLocaleString() || 0}
-                </RecordTableCellTrigger>
-                <RecordTableCellContent>
+                </RecordTableInlineCell.Trigger>
+                <RecordTableInlineCell.Content>
                   <CurrencyField.ValueInput
                     value={taxAmounts.amountWithTax ?? 0}
                     onChange={(value) => handleTaxValueChange('amount', value)}
                   />
-                </RecordTableCellContent>
-              </RecordTablePopover>
+                </RecordTableInlineCell.Content>
+              </PopoverScoped>
             </Table.Cell>
           </RecordTableHotKeyControl>
         </>

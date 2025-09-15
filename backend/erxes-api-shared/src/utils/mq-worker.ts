@@ -94,8 +94,7 @@ export const sendWorkerMessage = async ({
       setTimeout(() => reject(new Error('Worker timeout')), timeout),
     ),
   ]).catch((err) => {
-    console.error(`[Worker Error] ${queueKey}:${jobName}: ${err.message}`);
-    return defaultValue;
+    throw err;
   });
 
   return result || defaultValue;

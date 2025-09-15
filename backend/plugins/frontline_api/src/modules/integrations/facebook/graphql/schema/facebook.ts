@@ -101,9 +101,11 @@ export const queries = `
   facebookHasTaggedMessages(conversationId: String!): Boolean
 
   facebookPostMessages(conversationId: String! getFirst: Boolean, ${pageParams}): [FacebookPostMessage]
-
-
-
+  facebookMessengerBotsTotalCount:Int
+  facebookMessengerBots:[FacebookMessengerBot]
+  facebookMessengerBot(_id:String):FacebookMessengerBot
+  facebookGetBotPosts(botId:String):JSON
+  facebookGetBotPost(botId:String,postId:String):JSON
 `;
 
 export const mutations = `

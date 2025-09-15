@@ -1,5 +1,3 @@
-'use client';
-
 import { useAtom } from 'jotai';
 import { posCategoryAtom } from '../../states/posCategory';
 import { PosCreateTabContent, PosCreateLayout } from './pos-create-layout';
@@ -275,9 +273,11 @@ export const PosCreate = () => {
       form={basicInfoForm}
       onFormSubmit={handleBasicInfoSubmit}
       onFinalSubmit={handleFinalSubmit}
-      onSaveSlots={() => handleSaveSlots(createdPosId || '')}
-      loading={posLoading || slotLoading}
-      error={posError || slotError}
+      onSaveSlots={
+        createdPosId ? () => handleSaveSlots(createdPosId) : undefined
+      }
+      loading={loading}
+      error={error}
     >
       <PosCreateTabContent value="overview">
         <ChooseCategoryPage />

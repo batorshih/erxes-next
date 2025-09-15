@@ -21,7 +21,7 @@ export const useMergeCustomers = () => {
       onCompleted: (data) => {
         options?.onCompleted?.(data);
         setTimeout(() => {
-          setCursor(null);
+          setCursor('');
         }, 100);
       },
     });

@@ -3,11 +3,11 @@ import { IMember } from '../types/TeamMembers';
 
 export type ISelectMemberContext = {
   memberIds: string[];
-  onSelect: (member: IMember) => void;
-  members: IMember[];
-  setMembers: (members: IMember[]) => void;
+  onSelect: (member: IUser | null) => void;
+  members: IUser[];
+  setMembers: (members: IUser[]) => void;
   loading: boolean;
-  error: string | null;
+  allowUnassigned: boolean;
 };
 
 export const SelectMemberContext = createContext<ISelectMemberContext | null>(

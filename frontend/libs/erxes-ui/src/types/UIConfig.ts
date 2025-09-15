@@ -1,16 +1,24 @@
 export type IUIConfig = {
   name: string;
-  icon: React.ElementType;
-  modules: {
+  icon?: React.ElementType;
+  navigationGroup?: {
     name: string;
     icon: React.ElementType;
+    content: () => React.ReactNode;
+    subGroups?: () => React.ReactNode;
+  };
+  modules: {
+    name: string;
+    icon?: React.ElementType;
     path: string;
-    hasSettings: boolean;
-    hasWidgets: boolean;
-    submenus?: {
-      name: string;
-      path: string;
-      icon?: React.ElementType;
-    }[];
+    hasSettings?: boolean;
+    hasRelationWidget?: boolean;
+    hasFloatingWidget?: boolean;
+    settingsOnly?: boolean;
+  }[];
+
+  relationWidgets?: {
+    name: string;
+    icon?: React.ElementType;
   }[];
 };

@@ -22,12 +22,20 @@ import { AssignMemberInEditor } from 'ui-modules';
 import { useConversationMessageAdd } from '../hooks/useConversationMessageAdd';
 import { Block } from '@blocknote/core';
 import { InboxHotkeyScope } from '@/inbox/types/InboxHotkeyScope';
+import { useAtom, useAtomValue } from 'jotai';
+import { messageExtraInfoState } from '../states/messageExtraInfoState';
+import {
+  isInternalState,
+  onlyInternalState,
+} from '@/inbox/conversations/conversation-detail/states/isInternalState';
 
 export const MessageInput = () => {
   const [conversationId] = useQueryState('conversationId');
-  const [isInternalNote, setIsInternalNote] = useState(false);
+  const [isInternalNote, setIsInternalNote] = useAtom(isInternalState);
+  const onlyInternal = useAtomValue(onlyInternalState);
   const [content, setContent] = useState<Block[]>();
   const [mentionedUserIds, setMentionedUserIds] = useState<string[]>([]);
+  const messageExtraInfo = useAtomValue(messageExtraInfoState);
   const editor = useBlockEditor();
   const { addConversationMessage, loading } = useConversationMessageAdd();
   const {
@@ -58,6 +66,7 @@ export const MessageInput = () => {
         content: sendContent,
         mentionedUserIds,
         internal: isInternalNote,
+        extraInfo: messageExtraInfo,
       },
       onCompleted: () => {
         setContent(undefined);
@@ -99,25 +108,39 @@ export const MessageInput = () => {
           variant="outline"
           onPressedChange={() => setIsInternalNote(!isInternalNote)}
         >
-          Internal Note
-        </Toggle>
-        <Button size="icon" variant="outline" className="size-8">
-          <IconPaperclip />
-        </Button>
-
-        <Button
-          size="lg"
-          className="ml-auto"
-          disabled={loading || content?.length === 0}
-          onClick={handleSubmit}
-        >
-          {loading ? <Spinner size="small" /> : <IconArrowUp />}
-          Send
-          <Kbd className="ml-1">
-            <IconCommand size={12} />
-            <IconCornerDownLeft size={12} />
-          </Kbd>
-        </Button>
+          {isInternalNote && <AssignMemberInEditor editor={editor} />}
+        </BlockEditor>
+        <div className="flex px-6 gap-4">
+          <Toggle
+            pressed={isInternalNote}
+            size="lg"
+            variant="outline"
+            onPressedChange={() => {
+              if (onlyInternal) {
+                return;
+              }
+              setIsInternalNote(!isInternalNote);
+            }}
+          >
+            Internal Note
+          </Toggle>
+          <Button size="icon" variant="outline" className="size-8">
+            <IconPaperclip />
+          </Button>
+          <Button
+            size="lg"
+            className="ml-auto"
+            disabled={loading || content?.length === 0}
+            onClick={handleSubmit}
+          >
+            {loading ? <Spinner size="sm" /> : <IconArrowUp />}
+            Send
+            <Kbd className="ml-1">
+              <IconCommand size={12} />
+              <IconCornerDownLeft size={12} />
+            </Kbd>
+          </Button>
+        </div>
       </div>
     </div>
   );

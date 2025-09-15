@@ -68,12 +68,69 @@ import {
   IFacebookConfigModel,
   loadFacebookConfigClass,
 } from '@/integrations/facebook/db/models/Config';
+import {
+  ICallCdrModel,
+  loadCallCdrClass,
+} from '~/modules/integrations/call/db/models/Cdrs';
+import {
+  ICallHistoryModel,
+  loadCallHistoryClass,
+} from '~/modules/integrations/call/db/models/Histories';
+import {
+  ICallCustomerModel,
+  loadCallCustomerClass,
+} from '~/modules/integrations/call/db/models/Customers';
+import {
+  ICallIntegrationModel,
+  loadCallIntegrationClass,
+} from '~/modules/integrations/call/db/models/Integrations';
+import {
+  ICallConfigModel,
+  loadCallConfigClass,
+} from '~/modules/integrations/call/db/models/Configs';
+import {
+  ICallOperatorModel,
+  loadCallOperatorClass,
+} from '~/modules/integrations/call/db/models/Operators';
 
+import {
+  ICallQueueStatisticsModel,
+  loadCallQueueClass,
+} from '~/modules/integrations/call/db/models/QueueStatistics';
+import { ICallCdrDocument } from '~/modules/integrations/call/@types/cdrs';
+import { ICallOperatorDocuments } from '~/modules/integrations/call/@types/operators';
+import { ICallConfigDocument } from '~/modules/integrations/call/@types/config';
+import { ICallHistoryDocument } from '~/modules/integrations/call/@types/histories';
+import { ICallCustomer } from '~/modules/integrations/call/@types/customers';
+import { ICallIntegrationDocument } from '~/modules/integrations/call/@types/integrations';
+import { IFacebookBotDocument } from '~/modules/integrations/facebook/db/definitions/bots';
+import {
+  IFacebookBotModel,
+  loadFacebookBotClass,
+} from '~/modules/integrations/facebook/db/models/Bots';
+
+import {
+  ICustomerImapDocument,
+  IIntegrationImapDocument,
+  IMessageImapDocument,
+  ICustomerImapModel,
+  IIntegrationImapModel,
+  IMessageImapModel,
+  loadImapCustomerClass,
+  loadImapIntegrationClass,
+  loadImapMessageClass,
+  ILogImapModel,
+  ILogImapDocument,
+  loadImapLogClass,
+} from '~/modules/integrations/imap/models';
+import { ICallQueueStatisticsDocuments } from '~/modules/integrations/call/@types/queueStatistics';
 export interface IModels {
+  //inbox
   Channels: IChannelModel;
   Integrations: IIntegrationModel;
   Conversations: IConversationModel;
   ConversationMessages: IMessageModel;
+  //facebook
   FacebookIntegrations: IFacebookIntegrationModel;
   FacebookAccounts: IFacebookAccountModel;
   FacebookCustomers: IFacebookCustomerModel;
@@ -84,6 +141,21 @@ export interface IModels {
   FacebookLogs: IFacebookLogModel;
   FacebookPostConversations: IFacebookPostConversationModel;
   FacebookConfigs: IFacebookConfigModel;
+  //call
+  CallIntegrations: ICallIntegrationModel;
+  CallCustomers: ICallCustomerModel;
+  CallHistory: ICallHistoryModel;
+  CallConfigs: ICallConfigModel;
+  CallOperators: ICallOperatorModel;
+  CallCdrs: ICallCdrModel;
+  CallQueueStatistics: ICallQueueStatisticsModel;
+
+  FacebookBots: IFacebookBotModel;
+  //imap
+  ImapCustomers: ICustomerImapModel;
+  ImapIntegrations: IIntegrationImapModel;
+  ImapMessages: IMessageImapModel;
+  ImapLogs: ILogImapModel;
 }
 
 export interface IContext extends IMainContext {
@@ -97,6 +169,7 @@ export const loadClasses = (
   subdomain: string,
 ): IModels => {
   const models = {} as IModels;
+  //inbox models
   models.Channels = db.model<IChannelDocument, IChannelModel>(
     'channels',
     loadChannelClass(models),
@@ -113,6 +186,7 @@ export const loadClasses = (
     'conversation_messages',
     loadMessageClass(models),
   );
+  //facebook models
   models.FacebookAccounts = db.model<
     IFacebookAccountDocument,
     IFacebookAccountModel
@@ -132,7 +206,6 @@ export const loadClasses = (
     'conversation_messages_facebooks',
     loadFacebookConversationMessageClass(models),
   );
-
   models.FacebookCommentConversation = db.model<
     IFacebookCommentConversationDocument,
     IFacebookCommentConversationModel
@@ -163,6 +236,58 @@ export const loadClasses = (
     IFacebookConfigDocument,
     IFacebookConfigModel
   >('facebook_configs', loadFacebookConfigClass(models));
+  //call models
+  models.CallIntegrations = db.model<
+    ICallIntegrationDocument,
+    ICallIntegrationModel
+  >('calls_integrations', loadCallIntegrationClass(models));
+  models.CallCustomers = db.model<ICallCustomer, ICallCustomerModel>(
+    'calls_customers',
+    loadCallCustomerClass(models),
+  );
+
+  models.CallHistory = db.model<ICallHistoryDocument, ICallHistoryModel>(
+    'calls_history',
+    loadCallHistoryClass(models),
+  );
+  models.CallConfigs = db.model<ICallConfigDocument, ICallConfigModel>(
+    'calls_configs',
+    loadCallConfigClass(models),
+  );
+  models.CallOperators = db.model<ICallOperatorDocuments, ICallOperatorModel>(
+    'calls_operators',
+    loadCallOperatorClass(models),
+  );
+  models.CallCdrs = db.model<ICallCdrDocument, ICallCdrModel>(
+    'calls_cdr',
+    loadCallCdrClass(models),
+  );
+  models.CallQueueStatistics = db.model<
+    ICallQueueStatisticsDocuments,
+    ICallQueueStatisticsModel
+  >('calls_queue_statistics', loadCallQueueClass());
+
+  models.FacebookBots = db.model<IFacebookBotDocument, IFacebookBotModel>(
+    'facebook_messengers_bots',
+    loadFacebookBotClass(models),
+  );
+  //imap models
+  models.ImapCustomers = db.model<ICustomerImapDocument, ICustomerImapModel>(
+    'imap_customers',
+    loadImapCustomerClass(models),
+  );
+  models.ImapIntegrations = db.model<
+    IIntegrationImapDocument,
+    IIntegrationImapModel
+  >('imap_integrations', loadImapIntegrationClass(models));
+  models.ImapMessages = db.model<IMessageImapDocument, IMessageImapModel>(
+    'imap_messages',
+    loadImapMessageClass(models),
+  );
+  models.ImapLogs = db.model<ILogImapDocument, ILogImapModel>(
+    'imap_logs',
+    loadImapLogClass(models),
+  );
   return models;
 };
 

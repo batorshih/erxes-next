@@ -28,7 +28,6 @@ interface IDetailField {
 interface ILinkField {
   label: string;
   name: string;
-  path: string;
   Icon: React.ForwardRefExoticComponent<IconProps & React.RefAttributes<Icon>>;
 }
 
@@ -66,6 +65,21 @@ export const USER_DETAIL_FIELDS: IDetailField[] = [
     description: 'Short name',
   },
   {
+    label: 'Employee Id',
+    name: 'employeeId',
+    placeholder: 'Employee Id',
+    attributeType: 'text',
+    description: 'Employee Id',
+  },
+  {
+    label: 'Description',
+    name: 'description',
+    placeholder: 'Description',
+    attributeType: 'textfield',
+    path: 'details',
+    description: 'Description',
+  },
+  {
     label: 'Email',
     name: 'email',
     placeholder: 'Email',
@@ -78,29 +92,6 @@ export const USER_DETAIL_FIELDS: IDetailField[] = [
     placeholder: 'Username',
     attributeType: 'text',
     description: 'Username',
-  },
-  {
-    label: 'Description',
-    name: 'description',
-    placeholder: 'Description',
-    attributeType: 'textfield',
-    path: 'details',
-    description: 'Description',
-  },
-  {
-    label: 'Employee Id',
-    name: 'employeeId',
-    placeholder: 'Employee Id',
-    attributeType: 'text',
-    description: 'Employee Id',
-  },
-  {
-    label: 'Position',
-    name: 'position',
-    placeholder: 'Position',
-    attributeType: 'text',
-    path: 'details',
-    description: 'Position',
   },
   {
     label: 'Birth date',
@@ -126,43 +117,58 @@ export const USER_DETAIL_FIELDS: IDetailField[] = [
     path: 'details',
     description: 'Join date',
   },
+  {
+    label: 'Positions',
+    name: 'positionIds',
+    placeholder: 'Positions',
+    attributeType: 'text',
+    description: 'Positions',
+  },
+  {
+    label: 'Branches',
+    name: 'branchIds',
+    placeholder: 'Branches',
+    attributeType: 'text',
+    description: 'Branches',
+  },
+  {
+    label: 'Departments',
+    name: 'departmentIds',
+    placeholder: 'Departments',
+    attributeType: 'text',
+    description: 'Departments',
+  },
 ];
 
-export const USER_LINK_FIELDS: ILinkField[] = [
+export const USER_LINK_FIELDS = [
   {
     label: 'Facebook',
     name: 'facebook',
-    path: 'links',
     Icon: IconBrandFacebook,
   },
   {
     label: 'Twitter',
     name: 'twitter',
-    path: 'links',
     Icon: IconBrandX,
   },
   {
     label: 'Website',
     name: 'website',
-    path: 'links',
     Icon: IconWorldWww,
   },
   {
     label: 'Discord',
     name: 'discord',
-    path: 'links',
     Icon: IconBrandDiscord,
   },
   {
     label: 'GitHub',
     name: 'github',
-    path: 'links',
     Icon: IconBrandGithub,
   },
   {
     label: 'Instagram',
     name: 'instagram',
-    path: 'links',
     Icon: IconBrandInstagram,
   },
-];
+] as ILinkField[];

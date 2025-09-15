@@ -1,17 +1,30 @@
-import { ColumnDef } from '@tanstack/react-table';
-import { Badge, Button, RecordTable, RecordTableCellDisplay } from 'erxes-ui';
+import { Cell, ColumnDef } from '@tanstack/react-table';
 import {
-  IconArchive,
-  IconEdit,
-  IconSettings,
-  IconTrash,
-} from '@tabler/icons-react';
+  Badge,
+  Input,
+  RecordTable,
+  RecordTableInlineCell,
+  PopoverScoped,
+} from 'erxes-ui';
 import { IIntegrationDetail } from '../types/Integration';
 import { useIntegrations } from '../hooks/useIntegrations';
 import { useParams } from 'react-router-dom';
 import { BrandsInline } from 'ui-modules';
+import { useIntegrationEditField } from '@/integrations/hooks/useIntegrationEdit';
+import { useState } from 'react';
+import { ArchiveIntegration } from '@/integrations/components/ArchiveIntegration';
+import { RemoveIntegration } from '@/integrations/components/RemoveIntegration';
+import { InboxHotkeyScope } from '@/inbox/types/InboxHotkeyScope';
+import clsx from 'clsx';
+import { IntegrationType } from '@/types/Integration';
 
-export const IntegrationsRecordTable = () => {
+export const IntegrationsRecordTable = ({
+  Actions,
+}: {
+  Actions: (props: {
+    cell: Cell<IIntegrationDetail, unknown>;
+  }) => React.ReactNode;
+}) => {
   const params = useParams();
 
   const { integrations, loading, handleFetchMore } = useIntegrations({
@@ -23,17 +36,11 @@ export const IntegrationsRecordTable = () => {
 
   return (
     <RecordTable.Provider
-      columns={integrationTypeColumns}
-      data={integrations || []}
+      columns={integrationTypeColumns({ Actions })}
+      data={(integrations || []).filter((integration) => integration)}
       stickyColumns={['name']}
     >
-      <RecordTable.CursorProvider
-        hasPreviousPage={false}
-        hasNextPage={false}
-        loading={loading}
-        dataLength={integrations?.length}
-        sessionKey="integrations_cursor"
-      >
+      <RecordTable.Scroll>
         <RecordTable>
           <RecordTable.Header />
           <RecordTable.Body>
@@ -47,12 +54,65 @@ export const IntegrationsRecordTable = () => {
             />
           </RecordTable.Body>
         </RecordTable>
-      </RecordTable.CursorProvider>
+      </RecordTable.Scroll>
     </RecordTable.Provider>
   );
 };
 
-export const integrationTypeColumns: ColumnDef<IIntegrationDetail>[] = [
+const NameField = ({ cell }: { cell: Cell<IIntegrationDetail, unknown> }) => {
+  const [name, setName] = useState(cell.row.original.name);
+  const { editIntegrationField } = useIntegrationEditField(cell.row.original);
+  const handleSave = () => {
+    editIntegrationField(
+      {
+        variables: {
+          name,
+        },
+      },
+      cell.row.original.name === name,
+    );
+  };
+  if (cell.row.original.kind === IntegrationType.CALL) {
+    return <RecordTableInlineCell>{name}</RecordTableInlineCell>;
+  }
+
+  return (
+    <PopoverScoped
+      onOpenChange={(open) => {
+        if (!open) {
+          handleSave();
+        }
+      }}
+      scope={clsx(
+        InboxHotkeyScope.IntegrationSettingsPage,
+        cell.row.original._id,
+        'name',
+      )}
+      closeOnEnter
+    >
+      <RecordTableInlineCell.Trigger>{name}</RecordTableInlineCell.Trigger>
+      <RecordTableInlineCell.Content>
+        <Input value={name} onChange={(e) => setName(e.target.value)} />
+      </RecordTableInlineCell.Content>
+    </PopoverScoped>
+  );
+};
+
+export const BrandField = ({
+  cell,
+}: {
+  cell: Cell<IIntegrationDetail, unknown>;
+}) => {
+  return <></>;
+};
+
+export const integrationTypeColumns = ({
+  Actions,
+}: {
+  Actions: (props: {
+    cell: Cell<IIntegrationDetail, unknown>;
+  }) => React.ReactNode;
+}): ColumnDef<IIntegrationDetail>[] => [
   {
     id: 'name',
     accessorKey: 'name',
@@ -72,9 +132,9 @@ export const integrationTypeColumns: ColumnDef<IIntegrationDetail>[] = [
     header: () => <RecordTable.InlineHead label="Brand" />,
     cell: ({ cell }) => {
       return (
-        <RecordTableCellDisplay>
+        <RecordTableInlineCell>
           <BrandsInline brandIds={[cell.getValue() as string]} />
-        </RecordTableCellDisplay>
+        </RecordTableInlineCell>
       );
     },
     size: 235,
@@ -86,14 +146,14 @@ export const integrationTypeColumns: ColumnDef<IIntegrationDetail>[] = [
     cell: ({ cell }) => {
       const status = cell.getValue() as boolean;
       return (
-        <RecordTableCellDisplay>
+        <RecordTableInlineCell>
           <Badge
             className="text-xs capitalize"
             variant={status ? 'success' : 'destructive'}
           >
             {status ? 'Active' : 'Inactive'}
           </Badge>
-        </RecordTableCellDisplay>
+        </RecordTableInlineCell>
       );
     },
     size: 100,
@@ -106,14 +166,14 @@ export const integrationTypeColumns: ColumnDef<IIntegrationDetail>[] = [
       const { status } = cell.getValue() as IIntegrationDetail['healthStatus'];
 
       return (
-        <RecordTableCellDisplay>
+        <RecordTableInlineCell>
           <Badge
             className="text-xs capitalize"
-            variant={status === 'success' ? 'success' : 'destructive'}
+            variant={status === 'healthy' ? 'success' : 'destructive'}
           >
             {status}
           </Badge>
-        </RecordTableCellDisplay>
+        </RecordTableInlineCell>
       );
     },
     size: 120,
@@ -121,26 +181,16 @@ export const integrationTypeColumns: ColumnDef<IIntegrationDetail>[] = [
   {
     id: 'action-group',
     header: () => <RecordTable.InlineHead label="Actions" />,
-    cell: () => {
+    cell: ({ cell }) => {
+      const { isActive, _id, name } = cell.row.original;
       return (
-        <div className="flex items-center justify-center gap-1 [&>button]:px-2">
-          <Button variant={'outline'}>
-            <IconSettings size={12} />
-          </Button>
-          <Button variant={'outline'}>
-            <IconArchive size={12} />
-          </Button>
-          <Button variant={'outline'}>
-            <IconEdit size={12} />
-          </Button>
-          <Button
-            variant={'outline'}
-            className="text-destructive bg-destructive/10"
-          >
-            <IconTrash size={12} />
-          </Button>
+        <div className="flex items-center gap-1.5 px-2">
+          <Actions cell={cell} />
+          <ArchiveIntegration _id={_id} name={name} isActive={isActive} />
+          <RemoveIntegration _id={_id} name={name} />
         </div>
       );
     },
+    size: 300,
   },
 ];

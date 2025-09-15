@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { Navigate, Route, Routes } from 'react-router';
+import { Route, Routes } from 'react-router';
 import { Spinner } from 'erxes-ui';
 import { PageChangeEffect } from '../effect-components/AccountingPageChangeEffect';
 
@@ -21,6 +21,24 @@ const TransactionForm = lazy(() =>
   })),
 );
 
+const AdjustmentsHomePage = lazy(() =>
+  import('~/pages/AdjustmentsPage').then((module) => ({
+    default: module.AdjustmentsHomePage,
+  })),
+);
+
+const AdjustInventoryList = lazy(() =>
+  import('~/pages/AdjustInventoryListPage').then((module) => ({
+    default: module.AdjustInventoryListPage,
+  })),
+);
+
+const AdjustInventoryDetail = lazy(() =>
+  import('~/pages/AdjustInventoryDetailPage').then((module) => ({
+    default: module.AdjustInventoryDetailPage,
+  })),
+);
+
 const PluginAccounting = () => {
   return (
     <Suspense
@@ -33,12 +51,15 @@ const PluginAccounting = () => {
       <Routes>
         <Route
           path="/"
-          element={<Navigate to={`/accounting/main`} replace />}
+          element={<TransactionList />}
         />
         <Route path="/main" element={<TransactionList />} />
         <Route path="/records" element={<TrRecordList />} />
         <Route path="/transaction/edit" element={<TransactionForm />} />
         <Route path="/transaction/create" element={<TransactionForm />} />
+        <Route path="/adjustment" element={<AdjustmentsHomePage />} />
+        <Route path="/adjustment/inventory" element={<AdjustInventoryList />} />
+        <Route path="/adjustment/inventory/detail" element={<AdjustInventoryDetail />} />
       </Routes>
       <PageChangeEffect />
     </Suspense>

@@ -1,4 +1,3 @@
-'use client';
 import { Button, Input, Label, Select } from 'erxes-ui';
 import { useSearchParams } from 'react-router-dom';
 import { useAtom } from 'jotai';
@@ -148,16 +147,9 @@ export default function SyncCardForm() {
                   onValueChange={(value) =>
                     handleSelectChange('assignedUsers', value)
                   }
-                >
-                  <Select.Trigger>
-                    <Select.Value placeholder="Choose team member" />
-                  </Select.Trigger>
-                  <Select.Content>
-                    <Select.Item value="user1">User 1</Select.Item>
-                    <Select.Item value="user2">User 2</Select.Item>
-                    <Select.Item value="user3">User 3</Select.Item>
-                  </Select.Content>
-                </Select>
+                  onValueChange={handleUserChange}
+                  className="w-full h-8 justify-start bg-white hover:bg-gray-50"
+                />
               </div>
             </div>
 

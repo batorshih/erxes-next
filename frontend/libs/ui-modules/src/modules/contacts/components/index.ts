@@ -1,4 +1,13 @@
-export * from './CustomerInline';
-// export * from './SelectCustomer';
+export * from './CompaniesInline';
+export * from './CompanyEmails';
+export * from './CompanyPhones';
+export * from './CompanyName';
+export * from './CompanyOwner';
+export * from './CustomerEmails';
+export * from './CustomerName';
+export * from './CustomerOwner';
+export * from './CustomerPhones';
+export * from './CustomersInline';
+export * from './CustomerWidget';
 export * from './SelectCompany';
-export * from './SelectCustomers';
+export * from './SelectCustomer';

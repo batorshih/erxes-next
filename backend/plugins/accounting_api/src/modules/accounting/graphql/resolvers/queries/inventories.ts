@@ -28,21 +28,15 @@ const configQueries = {
   }: {
     productIds: string[], accountId: string, branchId: string, departmentId: string
   }, { models }: IContext) {
-    const aggCosts = await models.AdjustInventories.aggregate([
-      { $match: { accountId, branchId, departmentId } },
-      { $sort: { date: -1 } },
-      { $limit: 1 },
-      { $unwind: '$details' },
-      { $match: { 'details.productId': { $in: productIds } } },
-      { $group: { _id: '$details.productId', cost: { $first: '$cost' } } }
+    const aggCosts = await models.AdjustInvDetails.aggregate([
+      { $match: { accountId, branchId, departmentId, productId: { $in: productIds || [] } } },
     ]);
 
     const result = {};
-    for (const productIdCost of aggCosts) {
-      result[productIdCost._id] = productIdCost.cost;
+    for (const detail of aggCosts) {
+      result[detail.productId] = { totalCost: detail.cost, unitCost: detail.unitCost, remainder: detail.remainder };
     }
 
-    // { [productId: string]: number }
     return result
   },
 };

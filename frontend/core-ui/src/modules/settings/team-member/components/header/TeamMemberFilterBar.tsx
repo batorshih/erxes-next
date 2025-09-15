@@ -1,66 +1,44 @@
+import { Filter, PageSubHeader, useMultiQueryState } from 'erxes-ui';
 import {
-  IconFolder,
-  IconGitBranch,
-  IconHash,
-  IconLabelFilled,
-  IconUsersGroup,
-} from '@tabler/icons-react';
-import {
-  Filter,
-  PageSubHeader,
-  useFilterContext,
-  useMultiQueryState,
-  useQueryState,
-} from 'erxes-ui';
-import { SelectBranchTree, SelectDepartmentTree, SelectUnit } from 'ui-modules';
-import { TeamMemberFilter } from './TeamMemberFilter';
+  SelectBranches,
+  SelectBrands,
+  SelectDepartments,
+  SelectUnit,
+} from 'ui-modules';
+import { TeamMemberFilterPopover } from './TeamMemberFilterPopover';
 import { TeamMemberCounts } from '../TeamMemberCounts';
 
 export const TeamMemberFilterBar = () => {
   const [queries] = useMultiQueryState<{
-    code: string;
-    name: string;
-    branchId: string;
-    departmentId: string;
+    branchIds: string[];
+    departmentIds: string[];
     unitId: string;
-  }>(['code', 'name', 'branchId', 'departmentId', 'unitId']);
+    isActive: boolean;
+    brandIds: string[];
+  }>(['branchIds', 'departmentIds', 'unitId', 'isActive', 'brandIds']);
 
   const isFiltered = Object.values(queries).some((query) => !!query);
 
-  const { code, name, branchId, departmentId, unitId } = queries;
+  const { branchIds, departmentIds, unitId, brandIds } = queries;
 
   return (
     <Filter id="team-member">
       <PageSubHeader>
         <Filter.Bar>
-          <TeamMemberFilter />
-          {!!code && (
-            <Filter.BarItem>
-              <Filter.BarName>
-                <IconHash />
-                Code
-              </Filter.BarName>
-              <Filter.BarButton filterKey="code" inDialog>
-                {code}
-              </Filter.BarButton>
-              <Filter.BarClose filterKey="code" />
-            </Filter.BarItem>
+          <TeamMemberFilterPopover />
+          <Filter.Dialog>
+            <Filter.View filterKey="searchValue" inDialog>
+              <Filter.DialogStringView filterKey="searchValue" />
+            </Filter.View>
+          </Filter.Dialog>
+          <Filter.SearchValueBarItem />
+          {!!brandIds && (
+            <SelectBrands.FilterBar
+              mode="multiple"
+              filterKey="brandIds"
+              label="Brands"
+            />
           )}
-          {!!name && (
-            <Filter.BarItem>
-              <Filter.BarName>
-                <IconLabelFilled />
-                Name
-              </Filter.BarName>
-              <Filter.BarButton filterKey="name" inDialog>
-                {name}
-              </Filter.BarButton>
-              <Filter.BarClose filterKey="name" />
-            </Filter.BarItem>
-          )}
-          {!!branchId && <BranchFilterBar />}
-          {!!departmentId && <DepartmentFilterBar />}
-          {!!unitId && <UnitFilterBar />}
           <TeamMemberCounts />
         </Filter.Bar>
       </PageSubHeader>

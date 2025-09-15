@@ -47,7 +47,7 @@ const TagsFilterBar = ({ tagType }: { tagType: string }) => {
   }
 
   return (
-    <Filter.BarItem>
+    <Filter.BarItem queryKey="tags">
       <Filter.BarName>
         <IconTags />
         Tags
@@ -73,8 +73,7 @@ const TagsFilterBar = ({ tagType }: { tagType: string }) => {
             <SelectTags.Content />
           </Combobox.Content>
         </Popover>
-      </SelectTags>
-      <Filter.BarClose filterKey="tags" />
+      </SelectTags.Provider>
     </Filter.BarItem>
   );
 };

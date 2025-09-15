@@ -1,4 +1,7 @@
-import { CustomerFields } from '../../helpers/CustomerFields';
+import { JournalEnum } from '@/settings/account/types/Account';
+import { fixNum } from 'erxes-ui/lib';
+import { useEffect } from 'react';
+import { useWatch } from 'react-hook-form';
 import { ITransactionGroupForm } from '../../../types/JournalForms';
 import { TrJournalEnum } from '@/transactions/types/constants';
 import { VatForm } from '../../helpers/VatForm';
@@ -24,11 +27,16 @@ export const InvIncomeForm = ({
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-6">
-        <AccountField form={form} index={index} filter={{ journals: [TrJournalEnum.INVENTORY] }} allDetails={true} />
+        <AccountField
+          form={form}
+          index={index}
+          filter={{ journals: [JournalEnum.INVENTORY] }}
+          allDetails={true}
+        />
         <CustomerFields form={form} index={index} />
-        <AssignToField form={form} index={index} />
         <BranchField form={form} index={index} />
         <DepartmentField form={form} index={index} />
+        <AssignToField form={form} index={index} />
         <DescriptionField form={form} index={index} />
         <VatForm form={form} journalIndex={index} isWithTax={false} isSameSide={true} />
         <CtaxForm form={form} journalIndex={index} isWithTax={false} isSameSide={true} />

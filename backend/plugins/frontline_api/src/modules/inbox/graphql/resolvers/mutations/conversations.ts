@@ -34,6 +34,9 @@ export const sendConversationToServices = async (
       case 'instagram':
         break;
 
+      case 'calls':
+        break;
+
       case 'mobinetSms':
         break;
 
@@ -395,9 +398,11 @@ export const conversationMutations = {
     { _ids, status }: { _ids: string[]; status: string },
     { user, models, subdomain, serverTiming }: IContext,
   ) {
-    serverTiming.startTime('changeStatus');
-
-    await models.Conversations.changeStatusConversation(_ids, status, user._id);
+    await models.Conversations.changeStatusConversation(
+      _ids,
+      status,
+      'OQgac3z4G3I2LW9QPpAtL',
+    );
 
     serverTiming.endTime('changeStatus');
 

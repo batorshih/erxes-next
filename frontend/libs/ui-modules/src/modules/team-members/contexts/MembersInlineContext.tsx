@@ -1,12 +1,15 @@
 import { createContext, useContext } from 'react';
-import { IMember } from '../types/TeamMembers';
+import { AvatarProps } from 'erxes-ui';
+import { IUser } from '../types/TeamMembers';
 
-export interface IMembersInlineContext {
-  members: IMember[];
+export interface IUsersInlineContext {
+  members: IUser[];
   loading: boolean;
   memberIds?: string[];
   placeholder: string;
-  updateMembers?: (members: IMember[]) => void;
+  size?: AvatarProps['size'];
+  updateMembers?: (members: IUser[]) => void;
+  allowUnassigned?: boolean;
 }
 
 export const MembersInlineContext = createContext<IMembersInlineContext | null>(

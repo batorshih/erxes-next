@@ -26,12 +26,12 @@ import {
   openDialogState,
   openPopoverState,
 } from '../states/filterStates';
-import { FilterDialogDateView } from '../date-filter/components/DialogDateView';
 import { getDisplayValue } from '../date-filter/utils/getDisplayValue';
 import { DateFilterCommand } from '../date-filter/components/DateFilterCommand';
 import { usePreviousHotkeyScope } from 'erxes-ui/modules/hotkey/hooks/usePreviousHotkeyScope';
 import { useScopedHotkeys } from 'erxes-ui/modules/hotkey/hooks/useScopedHotkeys';
 import { useFilterQueryState } from '../hooks/useFilterQueryState';
+import { FilterDialogDateView } from '../date-filter/components/DialogDateView';
 
 const FilterProvider = ({
   children,
@@ -106,7 +106,7 @@ const FilterPopover = ({
     goBackToPreviousHotkeyScope,
   } = usePreviousHotkeyScope();
 
-  useScopedHotkeys(`f`, () => setOpen(true), scope);
+  useScopedHotkeys('f', () => setOpen(true), scope);
 
   useEffect(() => {
     if (open) {
@@ -186,9 +186,18 @@ const FilterView = ({
 };
 
 const FilterDialog = (props: React.ComponentPropsWithoutRef<typeof Dialog>) => {
-  const { id, setOpenDialog } = useFilterContext();
+  const { id, setOpenDialog, resetFilterState } = useFilterContext();
   const openDialog = useAtomValue(openDialogState(id));
-  return <Dialog open={openDialog} onOpenChange={setOpenDialog} {...props} />;
+  return (
+    <Dialog
+      open={openDialog}
+      onOpenChange={(open) => {
+        setOpenDialog(open);
+        !open && resetFilterState();
+      }}
+      {...props}
+    />
+  );
 };
 
 const FilterBar = React.forwardRef<
@@ -206,8 +215,16 @@ const FilterBar = React.forwardRef<
 
 const FilterBarItem = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
+  React.HTMLAttributes<HTMLDivElement> & {
+    queryKey?: string;
+  }
+>(({ className, queryKey, children, ...props }, ref) => {
+  const [query] = useFilterQueryState<string>(queryKey || 'root');
+
+  if (queryKey && !query) {
+    return null;
+  }
+
   return (
     <div
       ref={ref}
@@ -216,7 +233,10 @@ const FilterBarItem = React.forwardRef<
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+      <Filter.BarClose filterKey={queryKey} />
+    </div>
   );
 });
 
@@ -250,7 +270,7 @@ const FilterBarButton = React.forwardRef<
       ref={ref}
       variant="ghost"
       className={cn(
-        'rounded-none focus-visible:z-10 max-w-72 focus-visible:shadow-focus outline-none focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:outline-transparent',
+        'rounded-none focus-visible:z-10 max-w-72 transition-[color,box-shadow] focus-visible:shadow-focus outline-none focus-visible:outline-none focus-visible:outline-offset-0 focus-visible:outline-transparent',
         !props.variant && 'bg-background',
         className,
       )}
@@ -415,12 +435,8 @@ const FilterSearchValueTrigger = () => (
 const FilterSearchValueBarItem = () => {
   const [searchValue] = useFilterQueryState<string>('searchValue');
 
-  if (!searchValue) {
-    return null;
-  }
-
   return (
-    <Filter.BarItem>
+    <Filter.BarItem queryKey="searchValue">
       <Filter.BarItem>
         <Filter.BarName>
           <IconSearch />
@@ -429,7 +445,6 @@ const FilterSearchValueBarItem = () => {
         <Filter.BarButton filterKey="searchValue" inDialog>
           {searchValue}
         </Filter.BarButton>
-        <Filter.BarClose filterKey="searchValue" />
       </Filter.BarItem>
     </Filter.BarItem>
   );

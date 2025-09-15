@@ -9,7 +9,7 @@ export function TeamMemberSettingsBreadcrumb() {
     <>
       <Button variant="ghost" className="font-semibold">
         <IconUsersGroup className="w-4 h-4 text-accent-foreground" />
-        Team member Settings
+        Team member
       </Button>
       <Separator.Inline />
       <Button variant="ghost" className="hover:bg-transparent font-semibold">

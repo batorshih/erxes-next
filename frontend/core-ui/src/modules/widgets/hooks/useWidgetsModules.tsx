@@ -11,11 +11,9 @@ export const useWidgetsModules = () => {
   const plugins = Object.values(pluginsMetaData);
 
   return plugins.flatMap((plugin) =>
-    plugin.modules
-      .filter((module) => module.hasWidgets)
-      .map((module) => ({
-        ...module,
-        pluginName: plugin.name,
-      })),
+    (plugin.relationWidgets || []).map((module) => ({
+      ...module,
+      pluginName: plugin.name,
+    })),
   );
 };

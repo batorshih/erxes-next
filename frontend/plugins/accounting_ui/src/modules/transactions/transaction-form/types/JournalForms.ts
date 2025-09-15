@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import {
   transactionGroupSchema,
+  transactionInvIncomeSchema,
+  transactionInvMoveSchema,
+  transactionInvOutSchema,
+  transactionInvSaleSchema,
   transactionMainSchema,
   transactionCashSchema,
   transactionBankSchema,
@@ -24,6 +28,9 @@ export type TPayableJournal = z.infer<typeof transactionPayableSchema>;
 export type TTaxJournal = z.infer<typeof transactionTaxSchema>;
 
 export type TInvIncomeJournal = z.infer<typeof transactionInvIncomeSchema>;
+export type TInvOutJournal = z.infer<typeof transactionInvOutSchema>;
+export type TInvMoveJournal = z.infer<typeof transactionInvMoveSchema>;
+export type TInvSaleJournal = z.infer<typeof transactionInvSaleSchema>;
 export type TInvDetail = z.infer<typeof invDetailSchema>;
 
 export type ITransactionGroupForm = UseFormReturn<TAddTransactionGroup>;

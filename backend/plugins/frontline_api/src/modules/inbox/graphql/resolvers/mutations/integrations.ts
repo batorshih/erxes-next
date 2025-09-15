@@ -19,6 +19,11 @@ import {
   facebookRepairIntegrations,
   facebookCreateIntegrations,
 } from '@/integrations/facebook/messageBroker';
+import {
+  callCreateIntegration,
+  callRemoveIntergration,
+  callUpdateIntegration,
+} from '~/modules/integrations/call/messageBroker';
 
 export const sendCreateIntegration = async (
   subdomain: string,
@@ -40,6 +45,8 @@ export const sendCreateIntegration = async (
     switch (serviceName) {
       case 'facebook':
         return await facebookCreateIntegrations({ subdomain, data });
+      case 'calls':
+        return await callCreateIntegration({ subdomain, data });
 
       case 'instagram':
         // TODO: Implement Instagram integration
@@ -67,8 +74,9 @@ export const sendUpdateIntegration = async (
   try {
     switch (serviceName) {
       case 'facebook':
-        return await facebookUpdateIntegrations({ subdomain, data: data });
-
+        return await facebookUpdateIntegrations({ subdomain, data });
+      case 'calls':
+        return await callUpdateIntegration({ subdomain, data });
       case 'instagram':
         break;
 
@@ -93,8 +101,9 @@ export const sendRemoveIntegration = async (
   try {
     switch (serviceName) {
       case 'facebook':
-        return await facebookRemoveIntegrations({ subdomain, data: data });
-
+        return await facebookRemoveIntegrations({ subdomain, data });
+      case 'calls':
+        return await callRemoveIntergration({ subdomain, data });
       case 'instagram':
         break;
 
@@ -484,7 +493,9 @@ export const integrationMutations = {
         { $push: { integrationIds: integration._id } },
       );
     }
-    const data = {
+
+    const serviceName = integration.kind.split('-')[0];
+    await sendUpdateIntegration(subdomain, serviceName, {
       kind,
       integrationId: integration._id,
       doc: {

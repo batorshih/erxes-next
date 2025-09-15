@@ -1,28 +1,23 @@
-import { Separator, Sheet } from 'erxes-ui';
+import { Separator } from 'erxes-ui';
 import { CustomerDetailActions } from './CustomerDetailActions';
-import {
-  CustomerDetailLayout,
-  CustomerDetailTabContent,
-} from '@/contacts/customers/customer-detail/components/CustomerDetailLayout';
 import { CustomerDetailGeneral } from './CustomerDetailGeneral';
-import { CustomerGeneral } from './CustomerGeneral';
-import { CustomerProperties } from './CustomerProperties';
+import { useCustomerDetailWithQuery } from '@/contacts/customers/hooks/useCustomerDetailWithQuery';
+import { ContactsDetailLayout } from '@/contacts/components/ContactsDetail';
+import { CustomerDetailFields } from './CustomerDetailFields';
 
 export const CustomerDetail = () => {
+  const { customerDetail, loading } = useCustomerDetailWithQuery();
+
   return (
-    <CustomerDetailLayout actions={<CustomerDetailActions />}>
-      <div className="flex flex-auto">
-        <Sheet.Content className="border-b-0 rounded-b-none">
-          <CustomerDetailGeneral />
-          <Separator />
-          <CustomerDetailTabContent value="overview">
-            <CustomerGeneral />
-          </CustomerDetailTabContent>
-          <CustomerDetailTabContent value="properties">
-            <CustomerProperties />
-          </CustomerDetailTabContent>
-        </Sheet.Content>
-      </div>
-    </CustomerDetailLayout>
+    <ContactsDetailLayout
+      loading={loading}
+      notFound={customerDetail === undefined}
+      title="Customer Details"
+      actions={<CustomerDetailActions />}
+    >
+      <CustomerDetailGeneral />
+      <Separator />
+      <CustomerDetailFields />
+    </ContactsDetailLayout>
   );
 };

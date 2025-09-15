@@ -1,9 +1,13 @@
-import { startPlugin } from 'erxes-api-shared/utils';
+import { getEnv, startPlugin } from 'erxes-api-shared/utils';
 import { typeDefs } from '~/apollo/typeDefs';
 import { appRouter } from '~/init-trpc';
+import { afterProcess } from '~/meta/afterProcess';
+import { router } from '~/routes';
 import resolvers from './apollo/resolvers';
 import { generateModels } from './connectionResolvers';
-import { router } from '~/routes';
+import automations from './meta/automations';
+import initCallApp from '~/modules/integrations/call/initApp';
+import { initWebsocketService } from '~/modules/integrations/call/webSocket';
 
 startPlugin({
   name: 'frontline',
@@ -23,6 +27,13 @@ startPlugin({
   ),
 
   expressRouter: router,
+  onServerInit: async (app) => {
+    await initCallApp(app);
+    const VERSION = getEnv({ name: 'VERSION' });
+    if (!VERSION || (VERSION && VERSION !== 'saas')) {
+      await initWebsocketService();
+    }
+  },
 
   apolloServerContext: async (subdomain, context) => {
     const models = await generateModels(subdomain);
@@ -43,21 +54,33 @@ startPlugin({
   },
 
   meta: {
-    afterProcess: {
-      rules: [
-        { type: 'updatedDocument', contentTypes: ['core:user'] },
-        { type: 'afterAuth', types: ['login'] },
-        { type: 'afterMutation', mutationNames: ['usersEdit'] },
-      ],
-      onDocumentUpdated: async ({ subdomain }, data) => {
-        // do logic
+    automations,
+    afterProcess,
+    notificationModules: [
+      {
+        name: 'conversations',
+        description: 'Conversations',
+        icon: 'IconComment',
+        types: [
+          { name: 'conversationAddMessage', text: 'Message added' },
+          { name: 'conversationAssigneeChange', text: 'Assignee changed' },
+          { name: 'conversationCreated', text: 'Conversation created' },
+          { name: 'conversationParticipantAdded', text: 'Participant added' },
+          { name: 'conversationStateChange', text: 'State changed' },
+          { name: 'conversationTagged', text: 'Conversation tagged' },
+        ],
       },
-      onAfterAuth: async (context, data) => {
-        // do logic
+      {
+        name: 'channels',
+        description: 'Channels',
+        icon: 'IconDeviceLaptop',
+        types: [
+          {
+            name: 'channelMembersChange',
+            text: 'Assignee change',
+          },
+        ],
       },
-      onAfterMutation: (context, args) => {
-        // do logic
-      },
-    },
+    ],
   },
 });

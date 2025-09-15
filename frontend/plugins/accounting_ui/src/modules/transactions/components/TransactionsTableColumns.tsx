@@ -8,8 +8,9 @@ import {
   InlineCellEdit,
   Input,
   CurrencyCode,
-  CurrencyField,
   CurrencyFormatedDisplay,
+  RecordTableInlineCell,
+  PopoverScoped,
 } from 'erxes-ui';
 import { IconMoneybag, IconFile, IconCalendar } from '@tabler/icons-react';
 import { useState } from 'react';
@@ -21,22 +22,18 @@ const NumberCell = ({ getValue, row }: any) => {
   const { _id } = row.original;
 
   return (
-    <InlineCell
-      name="number"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>{getValue() as string}</InlineCellDisplay>
-      )}
-      edit={() => (
-        <InlineCellEdit>
-          <Input
-            value={number}
-            onChange={(e) => setNumber(e.target.value)}
-            className="w-full"
-          />
-        </InlineCellEdit>
-      )}
-    />
+    <PopoverScoped scope={`accounting-${_id}-number`}>
+      <RecordTableInlineCell.Trigger>
+        {getValue() as string}
+      </RecordTableInlineCell.Trigger>
+      <RecordTableInlineCell.Content>
+        <Input
+          value={number}
+          onChange={(e) => setNumber(e.target.value)}
+          className="w-full"
+        />
+      </RecordTableInlineCell.Content>
+    </PopoverScoped>
   );
 };
 
@@ -45,81 +42,64 @@ const DescriptionCell = ({ getValue, row }: any) => {
   const { _id } = row.original;
 
   return (
-    <InlineCell
-      name="description"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>{getValue() as string}</InlineCellDisplay>
-      )}
-      edit={() => (
-        <InlineCellEdit className="w-80">
-          <Input
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </InlineCellEdit>
-      )}
-    />
+    <PopoverScoped scope={`accounting-${_id}-description`}>
+      <RecordTableInlineCell.Trigger>
+        {getValue() as string}
+      </RecordTableInlineCell.Trigger>
+      <RecordTableInlineCell.Content>
+        <Input
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full"
+        />
+      </RecordTableInlineCell.Content>
+    </PopoverScoped>
+  );
+};
+
+const JournalCell = ({ getValue }: any) => {
+  const journal = getValue() as TrJournalEnum;
+
+  return (
+    <RecordTableInlineCell>
+      {TR_JOURNAL_LABELS[journal] || 'Main'}
+    </RecordTableInlineCell>
   );
 };
 
 const SumDebitCell = ({ getValue, row }: any) => {
-  const [sumDt, setSumDt] = useState(getValue() as number);
+  const sumDt = getValue() as number;
   const { _id } = row.original;
 
   return (
-    <InlineCell
-      name="sumDt"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>
-          <CurrencyFormatedDisplay
-            currencyValue={{
-              currencyCode: CurrencyCode.MNT,
-              amountMicros: sumDt * 1000000,
-            }}
-          />
-        </InlineCellDisplay>
-      )}
-      edit={() => (
-        <InlineCellEdit>
-          <CurrencyField.ValueInput
-            value={sumDt}
-            onChange={(value) => setSumDt(value)}
-          />
-        </InlineCellEdit>
-      )}
-    />
+    <PopoverScoped scope={`accounting-${_id}-sumDt`}>
+      <RecordTableInlineCell.Trigger>
+        <CurrencyFormatedDisplay
+          currencyValue={{
+            currencyCode: CurrencyCode.MNT,
+            amountMicros: sumDt,
+          }}
+        />
+      </RecordTableInlineCell.Trigger>
+    </PopoverScoped>
   );
 };
 
 const SumCreditCell = ({ getValue, row }: any) => {
-  const [sumCt, setSumCt] = useState(getValue() as number);
+  const sumCt = getValue() as number;
   const { _id } = row.original;
 
   return (
-    <InlineCell
-      name="sumCt"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>
-          <CurrencyFormatedDisplay
-            currencyValue={{
-              currencyCode: CurrencyCode.MNT,
-              amountMicros: sumCt * 1000000,
-            }}
-          />
-        </InlineCellDisplay>
-      )}
-      edit={() => (
-        <InlineCellEdit>
-          <CurrencyField.ValueInput
-            value={sumCt}
-            onChange={(value) => setSumCt(value)}
-          />
-        </InlineCellEdit>
-      )}
-    />
+    <PopoverScoped scope={`accounting-${_id}-sumCt`}>
+      <RecordTableInlineCell.Trigger>
+        <CurrencyFormatedDisplay
+          currencyValue={{
+            currencyCode: CurrencyCode.MNT,
+            amountMicros: sumCt,
+          }}
+        />
+      </RecordTableInlineCell.Trigger>
+    </PopoverScoped>
   );
 };
 
@@ -127,15 +107,9 @@ const BranchCell = ({ row }: any) => {
   const { _id, branch } = row.original;
 
   return (
-    <InlineCell
-      name="branch"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>
-          {`${branch?.code ? `${branch.code} - ` : ''}${branch?.title ?? ''}`}
-        </InlineCellDisplay>
-      )}
-    />
+    <RecordTableInlineCell>
+      {`${branch?.code ? `${branch.code} - ` : ''}${branch?.title ?? ''}`}
+    </RecordTableInlineCell>
   );
 };
 
@@ -143,32 +117,20 @@ const DepartmentCell = ({ row }: any) => {
   const { _id, department } = row.original;
 
   return (
-    <InlineCell
-      name="department"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>
-          {`${department?.code ? `${department.code} - ` : ''}${
-            department?.title ?? ''
-          }`}
-        </InlineCellDisplay>
-      )}
-    />
+    <RecordTableInlineCell>
+      {`${department?.code ? `${department.code} - ` : ''}${
+        department?.title ?? ''
+      }`}
+    </RecordTableInlineCell>
   );
 };
 
 const DateCell = ({ getValue, row }: any) => {
   const { _id } = row.original;
   return (
-    <InlineCell
-      name="date"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>
-          {dayjs(new Date(getValue())).format('YYYY-MM-DD')}
-        </InlineCellDisplay>
-      )}
-    />
+    <RecordTableInlineCell>
+      {dayjs(new Date(getValue())).format('YYYY-MM-DD')}
+    </RecordTableInlineCell>
   );
 };
 
@@ -176,16 +138,10 @@ const AccountCell = ({ row }: any) => {
   const { details, _id } = row.original;
 
   return (
-    <InlineCell
-      name="account"
-      recordId={_id || ''}
-      display={() => (
-        <InlineCellDisplay>
-          {details.length &&
-            `${details[0].account?.code} - ${details[0].account?.name}`}
-        </InlineCellDisplay>
-      )}
-    />
+    <RecordTableInlineCell>
+      {details.length &&
+        `${details[0].account?.code} - ${details[0].account?.name}`}
+    </RecordTableInlineCell>
   );
 };
 

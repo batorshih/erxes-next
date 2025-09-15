@@ -1,5 +1,4 @@
-'use client';
-import { Input, Label, Switch } from 'erxes-ui';
+import { Input, Switch, Form } from 'erxes-ui';
 import { SelectMember } from 'ui-modules';
 import { useForm, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -187,44 +186,179 @@ const PermissionForm = forwardRef<PermissionFormRef, PermissionFormProps>(
     };
 
     return (
-      <form onSubmit={handleSubmit} className="p-3">
-        <div className="space-y-8">
-          <div className="space-y-4">
-            <div className="flex flex-col gap-3">
-              <h2 className="text-[#4F46E5] text-lg font-semibold">ADMINS</h2>
-              <p className="text-[#A1A1AA] text-xs font-semibold">POS ADMIN</p>
+      <div className="p-3">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-8"
+          >
+            <div className="space-y-4">
+              <div className="flex flex-col gap-3">
+                <h2 className="text-[#4F46E5] text-lg font-semibold">ADMINS</h2>
+                <p className="text-[#A1A1AA] text-xs font-semibold">
+                  POS ADMIN
+                </p>
+              </div>
+
+              <Form.Field
+                control={form.control}
+                name="adminTeamMember"
+                render={({ field }) => (
+                  <Form.Item>
+                    <Form.Label className="text-gray-600">
+                      Select admin team member
+                    </Form.Label>
+                    <Form.Control>
+                      <SelectMember
+                        value={selectedAdminId || undefined}
+                        onValueChange={handleAdminMemberChange}
+                        className="w-full justify-start bg-white hover:bg-gray-50"
+                      />
+                    </Form.Control>
+                    <Form.Message />
+                  </Form.Item>
+                )}
+              />
+
+              <div className="flex gap-8">
+                <Form.Field
+                  control={form.control}
+                  name="adminPrintTempBill"
+                  render={({ field }) => (
+                    <Form.Item>
+                      <div className="flex gap-4 flex-col">
+                        <Form.Label className="text-[#71717A] text-sm font-medium uppercase">
+                          IS PRINT TEMP BILL
+                        </Form.Label>
+                        <Form.Control>
+                          <Switch
+                            checked={field.value || false}
+                            onCheckedChange={field.onChange}
+                          />
+                        </Form.Control>
+                      </div>
+                      <Form.Message />
+                    </Form.Item>
+                  )}
+                />
+
+                <Form.Field
+                  control={form.control}
+                  name="adminDirectSales"
+                  render={({ field }) => (
+                    <Form.Item>
+                      <div className="flex gap-4 flex-col">
+                        <Form.Label className="text-[#71717A] text-sm font-medium uppercase">
+                          DIRECT SALES
+                        </Form.Label>
+                        <Form.Control>
+                          <Switch
+                            checked={field.value || false}
+                            onCheckedChange={field.onChange}
+                          />
+                        </Form.Control>
+                      </div>
+                      <Form.Message />
+                    </Form.Item>
+                  )}
+                />
+              </div>
+
+              {watchAdminDirectSales && (
+                <Form.Field
+                  control={form.control}
+                  name="adminDirectDiscountLimit"
+                  render={({ field }) => (
+                    <Form.Item>
+                      <Form.Label className="text-gray-500 text-sm">
+                        DIRECT DISCOUNT LIMIT
+                      </Form.Label>
+                      <Form.Control>
+                        <Input
+                          {...field}
+                          placeholder="Write here"
+                          className="h-10"
+                        />
+                      </Form.Control>
+                      <Form.Message />
+                    </Form.Item>
+                  )}
+                />
+              )}
             </div>
 
-            <div className="space-y-2">
-              <p className="text-gray-600">Select admin team member</p>
-              <div>
-                <SelectMember.Detail
-                  value={selectedAdminId || undefined}
-                  onValueChange={handleAdminMemberChange}
-                  className="w-full h-10 justify-start border border-gray-300 bg-white hover:bg-gray-50"
-                />
-                {form.formState.errors.adminTeamMember && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {form.formState.errors.adminTeamMember.message}
-                  </p>
+            <div className="space-y-4 pt-6 border-t">
+              <div className="flex flex-col gap-3">
+                <h2 className="text-[#4F46E5] text-lg font-semibold">
+                  Cashiers
+                </h2>
+                <p className="text-[#A1A1AA] text-xs font-semibold">
+                  Pos Cashier
+                </p>
+              </div>
+
+              <Form.Field
+                control={form.control}
+                name="cashierTeamMember"
+                render={({ field }) => (
+                  <Form.Item>
+                    <Form.Label className="text-gray-600">
+                      Choose cashier team member
+                    </Form.Label>
+                    <Form.Control>
+                      <SelectMember
+                        value={selectedCashierId || undefined}
+                        onValueChange={handleCashierMemberChange}
+                        className="w-full justify-start bg-white hover:bg-gray-50"
+                      />
+                    </Form.Control>
+                    <Form.Message />
+                  </Form.Item>
                 )}
               </div>
             </div>
 
-            <div className="flex gap-8">
-              <div className="flex gap-4 flex-col">
-                <span className="text-[#71717A] text-sm font-medium uppercase">
-                  IS PRINT TEMP BILL
-                </span>
-                <Switch
-                  className="scale-150 w-7"
-                  checked={form.watch('adminPrintTempBill') || false}
-                  onCheckedChange={(checked) => {
-                    console.log('Admin print temp bill changed:', checked);
-                    form.setValue('adminPrintTempBill', checked, {
-                      shouldValidate: true,
-                    });
-                  }}
+              <div className="flex gap-8">
+                <Form.Field
+                  control={form.control}
+                  name="cashierPrintTempBill"
+                  render={({ field }) => (
+                    <Form.Item>
+                      <div className="flex gap-4 flex-col">
+                        <Form.Label className="text-[#71717A] text-sm font-medium uppercase">
+                          IS PRINT TEMP BILL
+                        </Form.Label>
+                        <Form.Control>
+                          <Switch
+                            checked={field.value || false}
+                            onCheckedChange={field.onChange}
+                          />
+                        </Form.Control>
+                      </div>
+                      <Form.Message />
+                    </Form.Item>
+                  )}
+                />
+
+                <Form.Field
+                  control={form.control}
+                  name="cashierDirectSales"
+                  render={({ field }) => (
+                    <Form.Item>
+                      <div className="flex gap-4 flex-col">
+                        <Form.Label className="text-[#71717A] text-sm font-medium uppercase">
+                          DIRECT SALES
+                        </Form.Label>
+                        <Form.Control>
+                          <Switch
+                            checked={field.value || false}
+                            onCheckedChange={field.onChange}
+                          />
+                        </Form.Control>
+                      </div>
+                      <Form.Message />
+                    </Form.Item>
+                  )}
                 />
               </div>
               <div className="flex gap-4 flex-col">

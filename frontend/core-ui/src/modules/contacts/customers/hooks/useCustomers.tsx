@@ -1,6 +1,6 @@
 import { QueryHookOptions, useQuery } from '@apollo/client';
 import { GET_CUSTOMERS } from '@/contacts/customers/graphql/queries/getCustomers';
-import { ICustomer } from '@/contacts/types/customerType';
+import { ICustomer } from 'ui-modules';
 import {
   useRecordTableCursor,
   mergeCursorData,
@@ -9,6 +9,8 @@ import {
   useNonNullMultiQueryState,
   parseDateRangeFromString,
   ICursorListResponse,
+  useMultiQueryState,
+  isUndefinedOrNull,
 } from 'erxes-ui';
 import { useLocation } from 'react-router-dom';
 import { ContactsPath } from '@/types/paths/ContactsPath';
@@ -16,28 +18,40 @@ import { CUSTOMERS_CURSOR_SESSION_KEY } from '@/contacts/customers/constants/cus
 
 const CUSTOMERS_PER_PAGE = 30;
 
-export const useCustomers = (
-  options?: QueryHookOptions<ICursorListResponse<ICustomer>>,
+export const useCustomersVariables = (
+  variables?: QueryHookOptions<ICursorListResponse<ICustomer>>['variables'],
 ) => {
-  const pathname = useLocation().pathname;
-  const { searchValue, tags, created, updated, lastSeen } =
-    useNonNullMultiQueryState<{
+  const { isLead } = useIsCustomerLeadSessionKey();
+  const [{ searchValue, tags, created, updated, lastSeen, brand, birthday }] =
+    useMultiQueryState<{
       searchValue: string;
       tags: string[];
       created: string;
       updated: string;
       lastSeen: string;
-    }>(['searchValue', 'tags', 'created', 'updated', 'lastSeen']);
+      brand: string;
+      birthday: string;
+    }>([
+      'searchValue',
+      'tags',
+      'created',
+      'updated',
+      'lastSeen',
+      'brand',
+      'birthday',
+    ]);
+  const { sessionKey } = useIsCustomerLeadSessionKey();
 
   const { cursor } = useRecordTableCursor({
     sessionKey: CUSTOMERS_CURSOR_SESSION_KEY,
   });
 
-  const customersQueryVariables = {
+  return {
     limit: CUSTOMERS_PER_PAGE,
     cursor,
-    searchValue,
-    tagIds: tags,
+    searchValue: searchValue || undefined,
+    tagIds: tags || undefined,
+    brandIds: brand ? [brand] : undefined,
     dateFilters: JSON.stringify({
       createdAt: {
         gte: parseDateRangeFromString(created)?.from,
@@ -51,16 +65,29 @@ export const useCustomers = (
         gte: parseDateRangeFromString(lastSeen)?.from,
         lte: parseDateRangeFromString(lastSeen)?.to,
       },
+      birthDate: {
+        gte: parseDateRangeFromString(birthday)?.from,
+        lte: parseDateRangeFromString(birthday)?.to,
+      },
     }),
-    type: pathname.includes(ContactsPath.Leads) ? 'lead' : 'customer',
-    ...options?.variables,
+    type: isLead ? 'lead' : 'customer',
+    ...variables,
   };
+};
 
+export const useCustomers = (
+  options?: QueryHookOptions<ICursorListResponse<ICustomer>>,
+) => {
+  const setCustomerTotalCount = useSetAtom(customerTotalCountAtom);
+  // Customer Filter implementation
+
+  const variables = useCustomersVariables(options?.variables);
   const { data, loading, fetchMore } = useQuery<ICursorListResponse<ICustomer>>(
     GET_CUSTOMERS,
     {
       ...options,
-      variables: customersQueryVariables,
+      skip: options?.skip || isUndefinedOrNull(variables.cursor),
+      variables,
     },
   );
 
@@ -104,6 +131,5 @@ export const useCustomers = (
     handleFetchMore,
     pageInfo,
     totalCount,
-    customersQueryVariables,
   };
 };

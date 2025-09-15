@@ -1,3 +1,11 @@
+import { followTrDocsState } from '../states/trStates';
+import { IconGavel, IconTrashX } from '@tabler/icons-react';
+import { ITransaction } from '@/transactions/types/Transaction';
+import { ITransactionGroupForm, TTrDoc } from '../types/JournalForms';
+import { TR_SIDES } from '../../types/constants';
+import { useAtomValue } from 'jotai';
+import { useTransactionsRemove } from '../hooks/useTransactionsRemove';
+import { useWatch } from 'react-hook-form';
 import {
   Button,
   CurrencyCode,
@@ -38,7 +46,7 @@ export const sumDtAndCt = (trDocs: TTrDoc[], followTrDocs: ITransaction[]) => {
 
 export const Summary = ({ form }: { form: ITransactionGroupForm }) => {
   const { trDocs } = useWatch({ control: form.control });
-  const [followTrDocs] = useAtom(followTrDocsState);
+  const followTrDocs = useAtomValue(followTrDocsState);
   const [parentId] = useQueryState<string>('parentId');
 
   const { removeTransactions } = useTransactionsRemove();
@@ -69,7 +77,7 @@ export const Summary = ({ form }: { form: ITransactionGroupForm }) => {
           <CurrencyFormatedDisplay
             currencyValue={{
               currencyCode: CurrencyCode.MNT,
-              amountMicros: sumDebit * 1000000,
+              amountMicros: sumDebit,
             }}
           />
         </span>
@@ -80,7 +88,7 @@ export const Summary = ({ form }: { form: ITransactionGroupForm }) => {
           <CurrencyFormatedDisplay
             currencyValue={{
               currencyCode: CurrencyCode.MNT,
-              amountMicros: sumCredit * 1000000,
+              amountMicros: sumCredit,
             }}
           />
         </span>
@@ -91,7 +99,7 @@ export const Summary = ({ form }: { form: ITransactionGroupForm }) => {
           <CurrencyFormatedDisplay
             currencyValue={{
               currencyCode: CurrencyCode.MNT,
-              amountMicros: (sumCredit - sumDebit) * 1000000,
+              amountMicros: (sumCredit - sumDebit),
             }}
           />
         </span>

@@ -1,24 +1,23 @@
 import {
-  IconShoppingCart,
-  IconBookmarks,
-  IconChartPie,
-  IconMagnet,
-  IconUser,
-  IconBuilding,
-  IconSpiral,
-  IconCategory,
+  IconAddressBook,
   IconAffiliate,
-  IconReport,
+  IconBuilding,
+  IconCategory,
+  IconChartPie,
+  IconFile,
+  IconMagnet,
+  IconShoppingCart,
+  IconSpiral,
+  IconUser,
 } from '@tabler/icons-react';
 import { IUIConfig } from 'erxes-ui';
 
 export const CORE_MODULES: IUIConfig['modules'] = [
   {
     name: 'contacts',
-    icon: IconBookmarks,
+    icon: IconAddressBook,
     path: 'contacts',
-    hasSettings: true,
-    hasWidgets: true,
+    hasSettings: false,
     submenus: [
       {
         name: 'customers',
@@ -52,7 +51,6 @@ export const CORE_MODULES: IUIConfig['modules'] = [
     icon: IconShoppingCart,
     path: 'products',
     hasSettings: true,
-    hasWidgets: true,
     submenus: [
       {
         name: 'categories',
@@ -65,21 +63,23 @@ export const CORE_MODULES: IUIConfig['modules'] = [
     name: 'segments',
     icon: IconChartPie,
     path: 'segments',
-    hasSettings: true,
-    hasWidgets: true,
+    hasSettings: false,
   },
   {
     name: 'automations',
     icon: IconAffiliate,
     path: 'automations',
     hasSettings: true,
-    hasWidgets: true,
   },
   {
     name: 'logs',
-    icon: IconReport,
     path: 'logs',
-    hasSettings: true,
-    hasWidgets: true,
+    settingsOnly: true,
+  },
+  {
+    name: 'documents',
+    icon: IconFile,
+    path: 'documents',
+    hasSettings: false,
   },
 ];

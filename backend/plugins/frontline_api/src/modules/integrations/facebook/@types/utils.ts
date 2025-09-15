@@ -101,6 +101,7 @@ export interface IChannelData {
         photo_url?: string;
       };
     };
+    payload?: any;
   };
   postback?: {
     title?: string;

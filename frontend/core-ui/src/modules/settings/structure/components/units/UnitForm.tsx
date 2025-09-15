@@ -7,7 +7,7 @@ import {
 } from 'ui-modules';
 import { TUnitForm } from '../../types/unit';
 
-export const UnitForm = ({ loading }: { loading: boolean }) => {
+export const UnitForm = ({ loading = false }: { loading?: boolean }) => {
   const { control } = useFormContext<TUnitForm>();
 
   if (loading) {

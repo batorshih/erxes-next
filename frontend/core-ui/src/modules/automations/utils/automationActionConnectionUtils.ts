@@ -143,12 +143,88 @@ export const generateConnect = (params: any, source: any) => {
   return info;
 };
 
-export const getNewId = (checkIds: string[]) => {
-  let newId = Math.random().toString(36).slice(-8);
+export const checkIsValidConnect = ({
+  nodes,
+  edges,
+  connection,
+  triggersConst,
+  actionsConst,
+}: {
+  nodes: Node<NodeData>[];
+  connection: Connection;
+  edges: Edge[];
+  triggersConst: any[];
+  actionsConst: any[];
+}) => {
+  const target = nodes.find((node) => node.id === connection.target);
+  const source = nodes.find((node) => node.id === connection.source);
 
-  if (checkIds.includes(newId)) {
-    newId = getNewId(checkIds);
+  const hasCycle = (node: Node<NodeData>, visited = new Set()) => {
+    if (node?.data?.nodeType === 'trigger') return true;
+    if (visited.has(node.id)) return false;
+
+    visited.add(node.id);
+
+    for (const outgoer of getOutgoers(node, nodes, edges)) {
+      if (outgoer.id === connection.source) return true;
+      if (hasCycle(outgoer, visited)) return true;
+    }
+  };
+
+  if (!target || !source) {
+    return false;
   }
 
-  return newId;
+  const allNodes = [...triggersConst, ...actionsConst];
+  const sourceDef = allNodes.find((n) => n.type === source.data?.type);
+
+  if (
+    sourceDef?.connectableActionTypes &&
+    !sourceDef.connectableActionTypes.includes(target.data?.type)
+  ) {
+    return false;
+  }
+
+  return !hasCycle(target);
+};
+
+export const onDisconnect = ({
+  edge,
+  setEdges,
+  nodes,
+  triggers,
+  actions,
+}: {
+  edge: EdgeProps;
+  setEdges: Dispatch<SetStateAction<Edge<EdgeProps>[]>>;
+  nodes: Node<NodeData>[];
+  triggers: ITrigger[];
+  actions: IAction[];
+}) => {
+  setEdges((eds: Edge<EdgeProps>[]) => eds.filter((e) => e.id !== edge.id));
+  const info: any = { source: edge.source, target: undefined };
+
+  const sourceNode = nodes.find((n) => n.id === edge.source);
+
+  if ((edge?.sourceHandleId || '').includes(sourceNode?.id || '')) {
+    const [_action, _sourceId, optionalConnectId] = (edge.id || '').split('-');
+    info.optionalConnectId = optionalConnectId;
+    info.connectType = 'optional';
+  }
+
+  connectionHandler(
+    triggers,
+    actions,
+    generateConnect(
+      {
+        source: edge.source,
+        target: edge.target,
+        sourceHandle: edge.sourceHandleId || '',
+        targetHandle: edge.targetHandleId || '',
+      },
+      sourceNode,
+    ),
+    info.targetId,
+    [],
+  );
 };

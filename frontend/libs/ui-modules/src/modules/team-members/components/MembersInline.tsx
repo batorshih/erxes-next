@@ -1,16 +1,21 @@
 import {
+  Avatar,
+  AvatarProps,
+  Combobox,
+  Tooltip,
+  cn,
+  isUndefinedOrNull,
+  readImage,
+} from 'erxes-ui';
+import {
   MembersInlineContext,
   useMembersInlineContext,
 } from '../contexts/MembersInlineContext';
-import { IMember } from '../types/TeamMembers';
-import {
-  Avatar,
-  AvatarProps,
-  cn,
-  Combobox,
-  isUndefinedOrNull,
-  Tooltip,
-} from 'erxes-ui';
+import { useEffect, useState } from 'react';
+
+import { IUser } from '../types/TeamMembers';
+import { IconUserCancel } from '@tabler/icons-react';
+import { currentUserState } from 'ui-modules/states';
 import { useAtomValue } from 'jotai';
 import { currentUserState } from 'ui-modules/states';
 import { IconUserCircle } from '@tabler/icons-react';
@@ -22,13 +27,17 @@ export const MembersInlineRoot = ({
   memberIds,
   placeholder,
   updateMembers,
-  size,
+  className,
+  size = 'lg',
+  allowUnassigned,
 }: {
   members?: IMember[];
   memberIds?: string[];
   placeholder?: string;
-  updateMembers?: (members: IMember[]) => void;
-  size?: 'lg';
+  updateMembers?: (members: IUser[]) => void;
+  className?: string;
+  size?: AvatarProps['size'];
+  allowUnassigned?: boolean;
 }) => {
   return (
     <MembersInlineProvider
@@ -36,9 +45,11 @@ export const MembersInlineRoot = ({
       memberIds={memberIds}
       placeholder={placeholder}
       updateMembers={updateMembers}
+      size={size}
+      allowUnassigned={allowUnassigned}
     >
       <MembersInlineAvatar size={size} />
-      <MembersInlineTitle />
+      <MembersInlineTitle className={className} />
     </MembersInlineProvider>
   );
 };
@@ -49,12 +60,16 @@ export const MembersInlineProvider = ({
   members,
   placeholder,
   updateMembers,
+  size,
+  allowUnassigned,
 }: {
   children?: React.ReactNode;
   memberIds?: string[];
   members?: IMember[];
   placeholder?: string;
-  updateMembers?: (members: IMember[]) => void;
+  updateMembers?: (members: IUser[]) => void;
+  size?: AvatarProps['size'];
+  allowUnassigned?: boolean;
 }) => {
   const [_members, _setMembers] = useState<IMember[]>(members || []);
 
@@ -68,6 +83,8 @@ export const MembersInlineProvider = ({
           ? 'Select members'
           : placeholder,
         updateMembers: updateMembers || _setMembers,
+        size,
+        allowUnassigned,
       }}
     >
       <Tooltip.Provider>{children}</Tooltip.Provider>
@@ -91,7 +108,13 @@ const MemberInlineEffectComponent = ({ memberId }: { memberId: string }) => {
   });
 
   useEffect(() => {
-    const newMembers = [...members].filter((m) => memberIds?.includes(m._id));
+    const newMembers = [...members].filter(
+      (m) => memberIds?.includes(m._id) && m._id !== memberId,
+    );
+    if (newMembers.some((m) => m._id === memberId)) {
+      updateMembers?.(newMembers);
+      return;
+    }
     if (userDetail) {
       updateMembers?.([...newMembers, { ...userDetail, _id: memberId }]);
     }
@@ -104,9 +127,16 @@ const MemberInlineEffectComponent = ({ memberId }: { memberId: string }) => {
   return null;
 };
 
-export const MembersInlineAvatar = ({ className, ...props }: AvatarProps) => {
-  const { members, loading, memberIds } = useMembersInlineContext();
-  const currentUser = useAtomValue(currentUserState) as IMember;
+export const MembersInlineAvatar = ({
+  className,
+  containerClassName,
+  ...props
+}: AvatarProps & {
+  containerClassName?: string;
+}) => {
+  const { members, loading, memberIds, size, allowUnassigned } =
+    useMembersInlineContext();
+  const currentUser = useAtomValue(currentUserState) as IUser;
 
   const sortedMembers = [...members].sort((a, b) => {
     if (a._id === currentUser?._id) return -1;
@@ -116,7 +146,7 @@ export const MembersInlineAvatar = ({ className, ...props }: AvatarProps) => {
 
   if (loading)
     return (
-      <div className="flex -space-x-1.5">
+      <div className={cn('flex -space-x-1.5', containerClassName)}>
         {memberIds?.map((memberId) => (
           <Avatar key={memberId} className={cn('bg-background', className)}>
             <Avatar.Fallback />
@@ -129,27 +159,8 @@ export const MembersInlineAvatar = ({ className, ...props }: AvatarProps) => {
     const { details } = member;
     const { avatar, fullName } = details || {};
 
-    if (member._id === currentUser._id) {
-      return (
-        <Tooltip delayDuration={100}>
-          <Tooltip.Trigger asChild>
-            <Avatar
-              size="lg"
-              {...props}
-              className={cn(className, 'items-center justify-center')}
-            >
-              <IconUserCircle className="text-muted-foreground !size-5 flex-none" />
-            </Avatar>
-          </Tooltip.Trigger>
-          <Tooltip.Content>
-            <p>You</p>
-          </Tooltip.Content>
-        </Tooltip>
-      );
-    }
-
     return (
-      <Tooltip>
+      <Tooltip delayDuration={100} key={member._id}>
         <Tooltip.Trigger asChild>
           <Avatar
             className={cn(
@@ -157,10 +168,10 @@ export const MembersInlineAvatar = ({ className, ...props }: AvatarProps) => {
               members.length > 1 && 'ring-2 ring-background',
               className,
             )}
-            size="lg"
+            size={size || 'lg'}
             {...props}
           >
-            <Avatar.Image src={avatar} />
+            <Avatar.Image src={readImage(avatar as string, 200)} />
             <Avatar.Fallback>{fullName?.charAt(0) || ''}</Avatar.Fallback>
           </Avatar>
         </Tooltip.Trigger>
@@ -171,7 +182,14 @@ export const MembersInlineAvatar = ({ className, ...props }: AvatarProps) => {
     );
   };
 
-  if (members.length === 0) return null;
+  if (members.length === 0) {
+    if (allowUnassigned) {
+      return (
+        <IconUserCancel className="text-muted-foreground flex-none size-4" />
+      );
+    }
+    return null;
+  }
 
   if (members.length === 1) return renderAvatar(members[0]);
 
@@ -180,13 +198,13 @@ export const MembersInlineAvatar = ({ className, ...props }: AvatarProps) => {
 
   return (
     <div className="flex -space-x-1.5">
-      {withAvatar.map(renderAvatar)}
+      {withAvatar.map((member) => renderAvatar(member))}
       {restMembers.length > 0 && (
         <Tooltip>
           <Tooltip.Trigger asChild>
             <Avatar
               className={cn('ring-2 ring-background bg-background', className)}
-              size="lg"
+              size={size || 'lg'}
               {...props}
             >
               <Avatar.Fallback className="bg-primary/10 text-primary">
@@ -203,16 +221,26 @@ export const MembersInlineAvatar = ({ className, ...props }: AvatarProps) => {
   );
 };
 
-export const MembersInlineTitle = () => {
-  const { members, loading, placeholder } = useMembersInlineContext();
-  const currentUser = useAtomValue(currentUserState) as IMember;
+export const MembersInlineTitle = ({ className }: { className?: string }) => {
+  const { members, loading, placeholder, allowUnassigned } =
+    useMembersInlineContext();
+  const currentUser = useAtomValue(currentUserState) as IUser;
   const isCurrentUser = members.some((m) => m._id === currentUser._id);
 
   const getDisplayValue = () => {
-    if (members.length === 0) return undefined;
+    if (!members || members.length === 0) {
+      if (allowUnassigned) {
+        return (
+          <span className="capitalize text-muted-foreground/80">
+            No assignee
+          </span>
+        );
+      }
+      return undefined;
+    }
 
     if (members.length === 1) {
-      return isCurrentUser ? 'Current User' : members?.[0].details?.fullName;
+      return members?.[0].details?.fullName;
     }
 
     if (isCurrentUser) {
@@ -233,6 +261,7 @@ export const MembersInlineTitle = () => {
       value={getDisplayValue()}
       loading={loading}
       placeholder={placeholder}
+      className={className}
     />
   );
 };

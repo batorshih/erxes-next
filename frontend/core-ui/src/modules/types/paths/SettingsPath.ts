@@ -3,17 +3,20 @@ import { Icon } from '@tabler/icons-react';
 export enum SettingsPath {
   Index = 'settings/',
   Profile = 'profile',
-  Experience = 'experience',
+  ChangePassword = 'change-password',
+  // Experience = 'experience',
 }
 
 export enum SettingsWorkspacePath {
-  General = 'general',
+  // General = 'general',
   FileUpload = 'file-upload',
   MailConfig = 'mail-config',
-  Permission = 'permission',
+  Apps = 'apps',
+  Permissions = 'permissions',
+  Properties = 'properties',
   TeamMember = 'team-member',
-  Structure = 'structure',
-  StructureCatchAll = 'structure/*',
+  // Structure = 'structures',
+  // StructureCatchAll = 'structures/*',
   Tags = 'tags',
   ProductsCatchAll = 'products/*',
   Brands = 'brands',

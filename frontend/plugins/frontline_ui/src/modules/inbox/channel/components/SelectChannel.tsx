@@ -148,6 +148,88 @@ export const SelectChannelsFormItem = ({
   );
 };
 
+export const SelectChannelFilterItem = () => {
+  return (
+    <Filter.Item value="channelId">
+      <IconTopologyStar3 />
+      Select Channel
+    </Filter.Item>
+  );
+};
+
+export const SelectChannelFilterView = () => {
+  const [channelId, setChannelId] = useQueryState<string>('channelId');
+  const { resetFilterState } = useFilterContext();
+
+  return (
+    <Filter.View filterKey="channelId">
+      <SelectChannelProvider
+        value={channelId || ''}
+        onValueChange={(value) => {
+          setChannelId(value as string);
+          resetFilterState();
+        }}
+      >
+        <SelectChannelsContent />
+      </SelectChannelProvider>
+    </Filter.View>
+  );
+};
+
+export const SelectChannelFilterBar = ({
+  iconOnly,
+  onValueChange,
+  queryKey,
+  mode = 'single',
+}: {
+  iconOnly?: boolean;
+  onValueChange?: (value: string[] | string) => void;
+  queryKey?: string;
+  mode?: 'single' | 'multiple';
+}) => {
+  const [channelId, setChannelId] = useQueryState<string | string[]>(
+    queryKey || 'channelId',
+  );
+  const [open, setOpen] = useState(false);
+
+  if (!channelId) {
+    return null;
+  }
+
+  return (
+    <Filter.BarItem queryKey={queryKey || 'channelId'}>
+      <Filter.BarName>
+        <IconTopologyStar3 />
+        {!iconOnly && 'Select Channel'}
+      </Filter.BarName>
+      <SelectChannelProvider
+        value={channelId || (mode === 'single' ? '' : [])}
+        mode={mode}
+        onValueChange={(value) => {
+          if (value.length > 0) {
+            setChannelId(value as string[] | string);
+          } else {
+            setChannelId(null);
+          }
+          setOpen(false);
+          onValueChange?.(value);
+        }}
+      >
+        <Popover open={open} onOpenChange={setOpen}>
+          <Popover.Trigger asChild>
+            <Filter.BarButton filterKey={queryKey || 'channelId'}>
+              <SelectChannelsValue />
+            </Filter.BarButton>
+          </Popover.Trigger>
+          <Combobox.Content>
+            <SelectChannelsContent />
+          </Combobox.Content>
+        </Popover>
+      </SelectChannelProvider>
+    </Filter.BarItem>
+  );
+};
+
 export const SelectChannel = {
   Provider: SelectChannelProvider,
   Value: SelectChannelsValue,

@@ -10,6 +10,10 @@ export default {
 			conversationAdminMessageInserted(customerId: String): ConversationAdminMessageInsertedResponse
 			conversationExternalIntegrationMessageInserted: JSON
 			conversationBotTypingStatus(_id: String!): JSON
+      waitingCallReceived(extension: String): String
+      talkingCallReceived(extension: String): String
+      agentCallReceived(extension: String): String
+      queueRealtimeUpdate(extension: String): String
 		`,
   generateResolvers: (graphqlPubsub) => {
     return {
@@ -157,6 +161,46 @@ export default {
           graphqlPubsub.asyncIterator(
             'conversationExternalIntegrationMessageInserted',
           ),
+      },
+
+      //call center subscriptions
+      waitingCallReceived: {
+        subscribe: withFilter(
+          () => graphqlPubsub.asyncIterator(`waitingCallReceived`),
+          (payload, variables) => {
+            const response = JSON.parse(payload.waitingCallReceived);
+            return response.extension === variables.extension;
+          },
+        ),
+      },
+      talkingCallReceived: {
+        subscribe: withFilter(
+          () => graphqlPubsub.asyncIterator(`talkingCallReceived`),
+          (payload, variables) => {
+            const response = JSON.parse(payload.talkingCallReceived);
+            return response.extension === variables.extension;
+          },
+        ),
+      },
+
+      agentCallReceived: {
+        subscribe: withFilter(
+          () => graphqlPubsub.asyncIterator(`agentCallReceived`),
+          (payload, variables) => {
+            const response = JSON.parse(payload.agentCallReceived);
+            return response.extension === variables.extension;
+          },
+        ),
+      },
+
+      queueRealtimeUpdate: {
+        subscribe: withFilter(
+          () => graphqlPubsub.asyncIterator(`queueRealtimeUpdate`),
+          (payload, variables) => {
+            const response = JSON.parse(payload.queueRealtimeUpdate);
+            return response.extension === variables.extension;
+          },
+        ),
       },
     };
   },

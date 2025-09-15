@@ -13,12 +13,12 @@ import { customerDetailActiveActionTabAtom } from '@/contacts/states/customerDet
 // import { ActivityLogs } from '@/activity-logs/components/ActivityLogs';
 // import { AddInternalNotes } from '@/internal-notes/components/AddInternalNotes';
 import { useAtom, useSetAtom } from 'jotai';
-import { useWidget } from 'ui-modules';
-import { useWidgetsModules } from '@/widgets/hooks/useWidgetsModules';
-import { useCustomerDetail } from '../hooks/useCustomerDetail';
+import { useRelationWidget } from 'ui-modules';
+import { useRelationWidgetsModules } from '@/widgets/hooks/useRelationWidgetsModules';
+import { useCustomerDetailWithQuery } from '../../hooks/useCustomerDetailWithQuery';
 
 export const CustomerDetailActions = () => {
-  const { customerDetail } = useCustomerDetail();
+  const { customerDetail } = useCustomerDetailWithQuery();
   const contactId = customerDetail?._id;
   const [activeTab, setActiveTab] = useAtom(customerDetailActiveActionTabAtom);
   const widgetsModules = useWidgetsModules();
@@ -70,8 +70,9 @@ export const CustomerDetailActions = () => {
               icon={item.icon as any}
               title={item.name}
             >
-              <Widget
-                module={item}
+              <RelationWidget
+                module={item.name}
+                pluginName={item.pluginName}
                 contentId={contactId || ''}
                 contentType="core:customer"
               />

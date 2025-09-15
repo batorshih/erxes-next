@@ -1,5 +1,6 @@
 import { Input } from 'erxes-ui';
-import { Attributes } from './Attributes';
+import { Attributes } from 'ui-modules/modules/automations/components/Attributes';
+import { IField } from 'ui-modules/modules/segments';
 
 type Props = {
   propertyType: string;
@@ -18,30 +19,6 @@ export const PlaceHolderInput = ({
   selectedField,
   onlySet,
 }: Props) => {
-  const { value: operatorValue = '', noInput } = selectedOperator || {};
-  const { type } = selectedField || {};
-
-  const getComma = (preValue: any) => {
-    if (type === 'select' && preValue) {
-      return ', ';
-    }
-
-    if (preValue) {
-      return ' ';
-    }
-
-    return '';
-  };
-
-  const onSelect = (attribute: string) => {
-    if (onlySet) {
-      value = `{{ ${attribute} }}`;
-    } else {
-      value = `${value || ''}${getComma(value)}{{ ${attribute} }}`;
-    }
-    onChange(value);
-  };
-
   return (
     <div className="flex flex-row items-end gap-2">
       <Input
@@ -54,7 +31,9 @@ export const PlaceHolderInput = ({
         selectedField={selectedField}
         selectedOperator={selectedOperator}
         contentType={propertyType}
-        onSelect={onSelect}
+        value={value}
+        onSelect={onChange}
+        isForSelectField={fieldType === 'select'}
       />
     </div>
   );

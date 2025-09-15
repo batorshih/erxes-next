@@ -1,11 +1,13 @@
-"use client"
-import { Label, Select } from "erxes-ui"
-import { SelectMember } from "ui-modules"
-import { useForm, UseFormReturn } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useEffect, useState, useImperativeHandle, forwardRef } from "react"
-import { deliveryConfigSchema, type DeliveryConfigFormValues } from "../formSchema"
-import { IPosDetail } from "~/modules/pos-detail.tsx/types/IPos"
+import { Form, Select } from 'erxes-ui';
+import { SelectMember, SelectProduct } from 'ui-modules';
+import { useForm, UseFormReturn } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useState, useImperativeHandle, forwardRef } from 'react';
+import {
+  deliveryConfigSchema,
+  type DeliveryConfigFormValues,
+} from '../formSchema';
+import { IPosDetail } from '@/pos-detail/types/IPos';
 
 interface DeliveryConfigFormProps {
   form?: UseFormReturn<DeliveryConfigFormValues>
@@ -199,25 +201,37 @@ const DeliveryConfigForm = forwardRef<DeliveryConfigFormRef, DeliveryConfigFormP
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-500">PIPELINE</Label>
-                <Select 
-                  value={form.watch("pipeline") || ""} 
-                  onValueChange={(value) => handleSelectChange("pipeline", value)}
-                >
-                  <Select.Trigger>
-                    <Select.Value placeholder="Choose pipeline" />
-                  </Select.Trigger>
-                  <Select.Content>
-                    <Select.Item value="pipeline1">Pipeline 1</Select.Item>
-                    <Select.Item value="pipeline2">Pipeline 2</Select.Item>
-                    <Select.Item value="pipeline3">Pipeline 3</Select.Item>
-                  </Select.Content>
-                </Select>
-                {form.formState.errors.pipeline && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {form.formState.errors.pipeline.message}
-                  </p>
+              <Form.Field
+                control={form.control}
+                name="pipeline"
+                render={({ field }) => (
+                  <Form.Item>
+                    <Form.Label className="text-sm text-gray-500">
+                      PIPELINE
+                    </Form.Label>
+                    <Form.Control>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <Select.Trigger>
+                          <Select.Value placeholder="Choose pipeline" />
+                        </Select.Trigger>
+                        <Select.Content>
+                          <Select.Item value="pipeline1">
+                            Pipeline 1
+                          </Select.Item>
+                          <Select.Item value="pipeline2">
+                            Pipeline 2
+                          </Select.Item>
+                          <Select.Item value="pipeline3">
+                            Pipeline 3
+                          </Select.Item>
+                        </Select.Content>
+                      </Select>
+                    </Form.Control>
+                    <Form.Message />
+                  </Form.Item>
                 )}
               </div>
 
@@ -252,63 +266,67 @@ const DeliveryConfigForm = forwardRef<DeliveryConfigFormRef, DeliveryConfigFormP
             </div>
 
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-500">WATCHED USERS</Label>
-                <p className="text-gray-600">Select watched team member</p>
-                <div>
-                  <SelectMember.Detail
-                    value={selectedWatchedUserId || undefined}
-                    onValueChange={handleWatchedUserChange}
-                    className="w-full h-10 justify-start border border-gray-300 bg-white hover:bg-gray-50"
-                  />
-                  {form.formState.errors.watchedUsers && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {form.formState.errors.watchedUsers.message}
-                    </p>
-                  )}
-                </div>
-              </div>
+              <Form.Field
+                control={form.control}
+                name="watchedUsers"
+                render={({ field }) => (
+                  <Form.Item>
+                    <Form.Label className="text-sm text-gray-500">
+                      WATCHED USERS
+                    </Form.Label>
+                    <p className="text-gray-600">Select watched team member</p>
+                    <Form.Control>
+                      <SelectMember
+                        value={selectedWatchedUserId || undefined}
+                        onValueChange={handleWatchedUserChange}
+                        className="w-full h-8 justify-start bg-white hover:bg-gray-50"
+                      />
+                    </Form.Control>
+                    <Form.Message />
+                  </Form.Item>
+                )}
+              />
 
-              <div className="space-y-2">
-                <Label className="text-sm text-gray-500">ASSIGNED USERS</Label>
-                <p className="text-gray-600">Select assigned team member</p>
-                <div>
-                  <SelectMember.Detail
-                    value={selectedAssignedUserId || undefined}
-                    onValueChange={handleAssignedUserChange}
-                    className="w-full h-10 justify-start border border-gray-300 bg-white hover:bg-gray-50"
-                  />
-                  {form.formState.errors.assignedUsers && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {form.formState.errors.assignedUsers.message}
-                    </p>
-                  )}
-                </div>
-              </div>
+              <Form.Field
+                control={form.control}
+                name="assignedUsers"
+                render={({ field }) => (
+                  <Form.Item>
+                    <Form.Label className="text-sm text-gray-500">
+                      ASSIGNED USERS
+                    </Form.Label>
+                    <p className="text-gray-600">Select assigned team member</p>
+                    <Form.Control>
+                      <SelectMember
+                        value={selectedAssignedUserId || undefined}
+                        onValueChange={handleAssignedUserChange}
+                        className="w-full h-8 justify-start bg-white hover:bg-gray-50"
+                      />
+                    </Form.Control>
+                    <Form.Message />
+                  </Form.Item>
+                )}
+              />
             </div>
           </div>
 
           <div className="space-y-4">
             <h2 className="text-indigo-600 text-xl font-medium">DELIVERY PRODUCT</h2>
 
-            <div className="space-y-2">
-              <Select
-                value={form.watch("deliveryProduct") || ""}
-                onValueChange={(value) => handleSelectChange("deliveryProduct", value)}
-              >
-                <Select.Trigger>
-                  <Select.Value placeholder="Choose delivery product" />
-                </Select.Trigger>
-                <Select.Content>
-                  <Select.Item value="product1">Product 1</Select.Item>
-                  <Select.Item value="product2">Product 2</Select.Item>
-                  <Select.Item value="product3">Product 3</Select.Item>
-                </Select.Content>
-              </Select>
-              {form.formState.errors.deliveryProduct && (
-                <p className="text-red-500 text-sm mt-1">
-                  {form.formState.errors.deliveryProduct.message}
-                </p>
+            <Form.Field
+              control={form.control}
+              name="deliveryProduct"
+              render={({ field }) => (
+                <Form.Item>
+                  <Form.Control>
+                    <SelectProduct
+                      value={field.value}
+                      onValueChange={handleDeliveryProductChange}
+                      className="w-full h-8 justify-start bg-white hover:bg-gray-50"
+                    />
+                  </Form.Control>
+                  <Form.Message />
+                </Form.Item>
               )}
             </div>
           </div>
@@ -320,4 +338,4 @@ const DeliveryConfigForm = forwardRef<DeliveryConfigFormRef, DeliveryConfigFormP
 
 DeliveryConfigForm.displayName = "DeliveryConfigForm"
 
-export default DeliveryConfigForm
+export default DeliveryConfigForm;

@@ -1,17 +1,13 @@
 import { useMemo } from 'react';
 import { useAtom } from 'jotai';
-import { pluginsConfigState } from 'ui-modules';
 import { IUIConfig } from 'erxes-ui';
 import { CORE_MODULES } from '~/plugins/constants/core-plugins.constants';
+import { pluginsConfigState } from 'ui-modules';
 
 export const usePluginsModules = () => {
   const [pluginsMetaData] = useAtom(pluginsConfigState);
 
   const modules = useMemo(() => {
-    const coreModules = [
-      ...CORE_MODULES.filter((module) => module.hasSettings),
-    ];
-
     if (pluginsMetaData) {
       const pluginsModules = Object.values(pluginsMetaData || {}).flatMap(
         (plugin) =>
@@ -21,10 +17,62 @@ export const usePluginsModules = () => {
           })),
       );
 
-      return [...coreModules, ...pluginsModules] as IUIConfig['modules'];
+      return [...CORE_MODULES, ...pluginsModules] as IUIConfig['modules'];
     }
-    return coreModules;
+    return CORE_MODULES;
   }, [pluginsMetaData]);
 
   return modules;
+};
+
+interface NavigationGroupResult {
+  icon?: React.ElementType;
+  contents: any[];
+  subGroups: any[];
+  name: string;
+}
+
+type NavigationGroups = Record<string, NavigationGroupResult>;
+
+export const usePluginsNavigationGroups = (): NavigationGroups => {
+  const [pluginsMetaData] = useAtom(pluginsConfigState);
+
+  const navigationGroups = useMemo(() => {
+    if (!pluginsMetaData) {
+      return {};
+    }
+
+    return Object.values(pluginsMetaData).reduce<NavigationGroups>(
+      (acc, plugin) => {
+        const groupName = plugin.navigationGroup?.name || plugin.name;
+
+        const existingGroup = acc[groupName] || {
+          contents: [],
+          subGroups: [],
+        };
+
+        const newContent = plugin.navigationGroup?.content;
+        const updatedContents = newContent
+          ? [...existingGroup.contents, newContent]
+          : existingGroup.contents;
+
+        const newSubGroup = plugin.navigationGroup?.subGroups;
+        const updatedSubGroups = newSubGroup
+          ? [...existingGroup.subGroups, newSubGroup]
+          : existingGroup.subGroups;
+
+        acc[groupName] = {
+          name: groupName,
+          icon: plugin.navigationGroup?.icon || existingGroup.icon,
+          contents: updatedContents,
+          subGroups: updatedSubGroups,
+        };
+
+        return acc;
+      },
+      {},
+    );
+  }, [pluginsMetaData]);
+
+  return navigationGroups;
 };

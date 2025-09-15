@@ -6,6 +6,7 @@ export const CompanyTextField = ({
   value,
   field,
   _id,
+  scope,
 }: ITextFieldContainerProps) => {
   const { companiesEdit } = useCompaniesEdit();
   const onSave = (editingValue: string) => {
@@ -20,8 +21,8 @@ export const CompanyTextField = ({
     <TextField
       placeholder={placeholder}
       value={value}
-      scope={``}
-      onValueChange={onSave}
+      scope={scope}
+      onSave={onSave}
     />
   );
 };

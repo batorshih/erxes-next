@@ -49,6 +49,45 @@ export const useConversations = (
     });
   };
 
+  useEffect(() => {
+    const unsubscribe = subscribeToMore<{
+      conversationClientMessageInserted: IConversation;
+    }>({
+      document: CONVERSATION_CLIENT_MESSAGE_INSERTED,
+      variables: {
+        userId,
+      },
+      updateQuery: (prev, { subscriptionData }) => {
+        if (subscriptionData.data) {
+          setNewMessagesCount((prev) => prev + 1);
+        }
+        return prev;
+        // if (!subscriptionData.data || !prev) return prev;
+        // const newMessage =
+        //   subscriptionData.data.conversationClientMessageInserted;
+        // const index = prev.conversations.list.findIndex(
+        //   (conversation) => conversation._id === newMessage._id,
+        // );
+        // const list = [...prev.conversations.list];
+        // if (index === -1) {
+        //   list.unshift(newMessage);
+        // } else {
+        //   list.splice(index, 1, {
+        //     ...list[index],
+        //     readUserIds: list[index].readUserIds?.filter((id) => id !== userId),
+        //     status: ConversationStatus.OPEN,
+        //     content: newMessage.content,
+        //   });
+        // }
+        // return { ...prev, conversations: { ...prev.conversations, list } };
+      },
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   return {
     totalCount,
     conversations: list,
